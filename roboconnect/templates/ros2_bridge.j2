@@ -132,65 +132,65 @@ class R2BTopicBridge:
 
 if __name__ == "__main__":
     rclpy.init()
-    nh = Node('ROSBridge')
+    nh = Node('RoboConnect')
     br_list = []
     ## Broker Connection for Bridge ------------------------------------------>
-    {% if model.broker.__class__.__name__ == 'RedisBroker' %}
+    {% if model.broker.type == 'Redis' %}
     broker_type = TransportType.REDIS
     from commlib.transports.redis import ConnectionParameters
     conn_params = ConnectionParameters(
         host='{{ model.broker.host }}',
         port=int({{ model.broker.port }}),
-        db={{ model.broker.db }},
-        username='{{ model.broker.username }}',
-        password='{{ model.broker.password }}',
-        ssl={{ model.broker.ssl }}
+        db={{ model.broker.db if model.broker.db is defined else 0 }},
+        username='{{ model.broker.auth.username if model.broker.auth is defined and model.broker.auth.username is defined else "" }}',
+        password='{{ model.broker.auth.password if model.broker.auth is defined and model.broker.auth.password is defined else "" }}',
+        ssl={{ model.broker.ssl if model.broker.ssl is defined else False }}
     )
-    {% elif model.broker.__class__.__name__ == 'AMQPBroker' %}
+    {% elif model.broker.type == 'AMQP' %}
     broker_type = TransportType.AMQP
     from commlib.transports.amqp import ConnectionParameters
     conn_params = ConnectionParameters(
         host='{{ model.broker.host }}',
         port={{ model.broker.port }},
-        vhost='{{ model.broker.vhost }}',
-        username='{{ model.broker.username }}',
-        password='{{ model.broker.password }}',
-        ssl={{ model.broker.ssl }}
+        vhost='{{ model.broker.vhost if model.broker.vhost is defined else "/" }}',
+        username='{{ model.broker.auth.username if model.broker.auth is defined and model.broker.auth.username is defined else "" }}',
+        password='{{ model.broker.auth.password if model.broker.auth is defined and model.broker.auth.password is defined else "" }}',
+        ssl={{ model.broker.ssl if model.broker.ssl is defined else False }}
     )
-    {% elif model.broker.__class__.__name__ == 'MQTTBroker' %}
+    {% elif model.broker.type == 'MQTT' %}
     broker_type = TransportType.MQTT
     from commlib.transports.mqtt import ConnectionParameters
     conn_params = ConnectionParameters(
         host='{{ model.broker.host }}',
         port={{ model.broker.port }},
-        username='{{ model.broker.username }}',
-        password='{{ model.broker.password }}',
-        ssl={{ model.broker.ssl }}
+        username='{{ model.broker.auth.username if model.broker.auth is defined and model.broker.auth.username is defined else "" }}',
+        password='{{ model.broker.auth.password if model.broker.auth is defined and model.broker.auth.password is defined else "" }}',
+        ssl={{ model.broker.ssl if model.broker.ssl is defined else False }}
     )
     {% endif %}
     {% for bridge in model.bridges %}
     ## <-----------------------------------------------------------------------
     {% if bridge.__class__.__name__ == 'TopicBridge' and bridge.direction == 'B2R' %}
     ## Topic Bridge B2R ----------------------------------------------------->
-    from {{ bridge.msgType.split('/')[1] }}.msg import {{ bridge.msgType.split('/')[2] }}
-    br = B2RTopicBridge(nh, '{{ bridge.rosURI }}', {{
-        bridge.msgType.split('/')[2] }}, broker_type,
+    from {{ bridge.topic.msg.split('/')[0] }}.msg import {{ bridge.topic.msg.split('/')[1] }}
+    br = B2RTopicBridge(nh, '{{ bridge.topic.uri }}', {{
+        bridge.topic.msg.split('/')[1] }}, broker_type,
                              '{{ bridge.brokerURI }}', conn_params)
     br_list.append(br)
     ## <-----------------------------------------------------------------------
     {% elif bridge.__class__.__name__ == 'TopicBridge' and bridge.direction == 'R2B' %}
     ## Topic Bridge R2B ----------------------------------------------------->
-    from {{ bridge.msgType.split('/')[1] }}.msg import {{ bridge.msgType.split('/')[2] }}
-    br = R2BTopicBridge(nh, '{{ bridge.rosURI }}', {{
-        bridge.msgType.split('/')[2] }}, broker_type,
+    from {{ bridge.topic.msg.split('/')[0] }}.msg import {{ bridge.topic.msg.split('/')[1] }}
+    br = R2BTopicBridge(nh, '{{ bridge.topic.uri }}', {{
+        bridge.topic.msg.split('/')[1] }}, broker_type,
                              '{{ bridge.brokerURI }}', conn_params)
     br_list.append(br)
     ## <-----------------------------------------------------------------------
     {% elif bridge.__class__.__name__ == 'ServiceBridge' and bridge.direction == 'B2R' %}
     ## RPC Bridge B2R ------------------------------------------------------->
-    from {{ bridge.msgType.split('/')[1] }}.srv import {{ bridge.msgType.split('/')[2] }}
-    br = B2RServiceBridge(nh, '{{ bridge.rosURI }}', {{
-        bridge.msgType.split('/')[2] }}, broker_type,
+    from {{ bridge.service.msg.split('/')[0] }}.srv import {{ bridge.service.msg.split('/')[1] }}
+    br = B2RServiceBridge(nh, '{{ bridge.service.uri }}', {{
+        bridge.service.msg.split('/')[1] }}, broker_type,
                              '{{ bridge.brokerURI }}', conn_params)
     br_list.append(br)
     ## <-----------------------------------------------------------------------

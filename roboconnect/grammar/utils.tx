@@ -8,5 +8,5 @@ Import: 'import' name=STRING;
 
 // Comments
 Comment: CommentLine | CommentBlock ;
-CommentLine: /\/\/.*?$/;
+CommentLine: /\/\/.*?$/ | /#.*?$/;
 CommentBlock: /\/\*(.|\n)*?\*\//;

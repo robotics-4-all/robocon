@@ -10,8 +10,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 
-from rosbridgeml.utils import build_model
-from rosbridgeml.definitions import TMP_DIR
+from roboconnect.utils import build_model
+from roboconnect.definitions import TMP_DIR
 
 API_KEY = os.getenv("API_KEY", "123123")
 

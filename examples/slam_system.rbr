@@ -1,0 +1,29 @@
+Robot[ROS2] MappingRobot @ "mapping-pc" {
+    TOPICS
+        scan [ "sensor_msgs/LaserScan", "/scan" ]
+        odom [ "nav_msgs/Odometry", "/odom" ]
+        map [ "nav_msgs/OccupancyGrid", "/map" ]
+        tf [ "tf2_msgs/TFMessage", "/tf" ]
+
+    SERVICES
+        save_map [ "slam_toolbox/SaveMap", "/slam_toolbox/save_map" ]
+        serialize_map [ "slam_toolbox/SerializePoseGraph", "/slam_toolbox/serialize_map" ]
+
+    NODES
+        slam_toolbox {
+            publishes: [ map, tf ]
+            subscribes: [ scan, odom, tf ]
+            services: [ save_map, serialize_map ]
+        }
+}
+
+BROKER[MQTT] MappingBroker {
+    host: "localhost",
+    port: 1883
+}
+
+# Bridge SLAM endpoints
+Bridge[Node] slam_bridges slam_toolbox:"slam";
+
+# Bridge TF separately if needed for specific visualization
+Bridge[TF] tf_bridge tf:"tf";

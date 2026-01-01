@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roboconnect"
+dynamic = ["version"]
+description = "A Domain-specific Language for Bridging ROS and ROS2 robotics systems to the IoT and Smart Environments systems."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [
+    {name = "Konstantinos Panayiotou", email = "klpanagi@gmail.com"}
+]
+keywords = ["textX", "roboconnect", "ros", "ros2", "bridge"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Interpreters",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "fastapi>=0.100.0",
+    "python-multipart",
+    "aiofiles",
+    "rich==13.4.2",
+    "jinja2",
+    "uvicorn",
+    "textX",
+]
+
+[project.optional-dependencies]
+dev = ["wheel"]
+test = [
+    "flake8",
+    "tox",
+    "coverage",
+    "coveralls",
+    "pytest",
+]
+
+[project.urls]
+Homepage = "https://github.com/robotics-4-all/RoboConnect"
+
+[project.scripts]
+roboconnect = "roboconnect.cli:main"
+
+[project.entry-points."textx_languages"]
+roboconnect = "roboconnect:roboconnect_language"
+
+[project.entry-points."textx_generators"]
+roboconnect_ros = "roboconnect.generator:generator_ros"
+roboconnect_ros2 = "roboconnect.generator:generator_ros2"
+
+[tool.setuptools]
+packages = {find = {include = ["roboconnect*"]}}
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.tx", "*.j2"]
+
+[tool.setuptools.dynamic]
+version = {attr = "roboconnect.__version__"}

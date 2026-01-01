@@ -15,4 +15,4 @@ COPY ./ /app
 RUN pip install .
 
 #
-CMD ["uvicorn", "rosbridgeml.api:api", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "roboconnect.api:api", "--host", "0.0.0.0", "--port", "8080"]

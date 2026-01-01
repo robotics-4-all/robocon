@@ -3,5 +3,4 @@ python-multipart
 aiofiles
 rich==13.4.2
 jinja2
-uvicorn
 textX

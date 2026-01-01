@@ -1,0 +1,49 @@
+Robot[ROS2] NavRobot @ "robot-pc" {
+    TOPICS
+        scan [ "sensor_msgs/LaserScan", "/scan" ]
+        odom [ "nav_msgs/Odometry", "/odom" ]
+        map [ "nav_msgs/OccupancyGrid", "/map" ]
+        tf [ "tf2_msgs/TFMessage", "/tf" ]
+        tf_static [ "tf2_msgs/TFMessage", "/tf_static" ]
+        initialpose [ "geometry_msgs/PoseWithCovarianceStamped", "/initialpose" ]
+        cmd_vel [ "geometry_msgs/Twist", "/cmd_vel" ]
+
+    SERVICES
+        get_map [ "nav_msgs/GetMap", "/map_server/map" ]
+        global_localization [ "std_srvs/Empty", "/global_localization" ]
+
+    ACTIONS
+        navigate_to_pose [ "nav2_msgs/NavigateToPose", "/navigate_to_pose" ]
+
+    NODES
+        map_server {
+            publishes: [ map ]
+            services: [ get_map ]
+        }
+
+        amcl {
+            publishes: [ tf ]
+            subscribes: [ scan, odom, tf, tf_static, initialpose ]
+            services: [ global_localization ]
+        }
+
+        controller_server {
+            publishes: [ cmd_vel ]
+            subscribes: [ odom, tf, tf_static ]
+        }
+
+        bt_navigator {
+            actions: [ navigate_to_pose ]
+        }
+}
+
+BROKER[Redis] NavBroker {
+    host: "10.0.0.5",
+    port: 6379
+}
+
+# Bridge all endpoints of amcl node
+Bridge[Node] amcl_bridges amcl:"robot/amcl";
+
+# Bridge navigation action
+Bridge[Node] nav_bridges bt_navigator:"robot/nav";

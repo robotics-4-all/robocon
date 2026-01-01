@@ -4,7 +4,7 @@ from os import path, mkdir, getcwd, chmod
 
 import jinja2
 
-from rosbridgeml.utils import build_model
+from roboconnect.utils import build_model
 
 _THIS_DIR = path.abspath(path.dirname(__file__))
 
@@ -18,8 +18,8 @@ jinja_env = jinja2.Environment(
 
 
 class GeneratorROS2:
-    bridge_tpl = jinja_env.get_template('ros2_bridge.tpl')
-    reqs_tpl = jinja_env.get_template('requirements.txt.tpl')
+    bridge_tpl = jinja_env.get_template('ros2_bridge.j2')
+    reqs_tpl = jinja_env.get_template('requirements.txt.j2')
     srcgen_folder = path.join(getcwd(), 'gen')
 
     PY_DEPS = [
@@ -31,14 +31,12 @@ class GeneratorROS2:
     def generate(model: object, out_dir: str = "gen"):
         if not path.exists(out_dir):
             mkdir(out_dir)
-        out_file = path.join(out_dir, f"{model.rosSys.name}_bridges.py")
-        if model.rosSys.type != 'ROS2':
+        out_file = path.join(out_dir, f"{model.robot.name}_bridges.py")
+        if model.robot.type != 'ROS2':
             print('[ERROR] - Did not find any ROS2 System definition!')
             return
         GeneratorROS2.report(model)
         code = GeneratorROS2.bridge_tpl.render(model=model)
-        for bridge in model.bridges:
-            print(bridge.msgType.split('/')[1])
         with open(out_file, 'w') as f:
             f.write(code)
         # Give execution permissions to the generated file
@@ -54,9 +52,15 @@ class GeneratorROS2:
 
     @staticmethod
     def report(model):
-        print(f"[*] - ROS2 System: {model.rosSys.name}")
+        print(f"[*] - ROS2 System: {model.robot.name}")
         for bridge in model.bridges:
+            if hasattr(bridge, 'topic'):
+                ros_uri = bridge.topic.uri
+            elif hasattr(bridge, 'service'):
+                ros_uri = bridge.service.uri
+            else:
+                ros_uri = getattr(bridge, 'rosURI', 'N/A')
             print(f'[*] - Bridge: Type={bridge.__class__.__name__},' + \
-                  f' Direction={bridge.direction}, ROS_URI={bridge.rosURI},' + \
+                  f' Direction={bridge.direction}, ROS_URI={ros_uri},' + \
                   f' Broker_URI={bridge.brokerURI},' + \
                   f' Broker=<{model.broker.host}:{model.broker.port}>')

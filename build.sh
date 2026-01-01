@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-IMAGE_ID=rbml
+IMAGE_ID=roboconnect
 
 docker build -t ${IMAGE_ID} .

@@ -1,0 +1,28 @@
+Robot[ROS] ROSMavros @ "drone-pc" {
+    TOPICS
+        local_pose [ "geometry_msgs/PoseStamped", "/mavros/local_position/pose" ]
+        battery [ "sensor_msgs/BatteryState", "/mavros/battery" ]
+        state [ "mavros_msgs/State", "/mavros/state" ]
+        imu [ "sensor_msgs/Imu", "/mavros/imu/data" ]
+
+    SERVICES
+        arm [ "mavros_msgs/CommandBool", "/mavros/cmd/arming" ]
+        set_mode [ "mavros_msgs/SetMode", "/mavros/set_mode" ]
+        takeoff [ "mavros_msgs/CommandTOL", "/mavros/cmd/takeoff" ]
+        land [ "mavros_msgs/CommandTOL", "/mavros/cmd/land" ]
+
+    NODES
+        mavros {
+            publishes: [ local_pose, battery, state, imu ]
+            services: [ arm, set_mode, takeoff, land ]
+        }
+}
+
+BROKER[AMQP] DroneBroker {
+    host: "rabbitmq.cloud",
+    port: 5672,
+    vhost: "/drones"
+}
+
+# Bridge all MAVROS endpoints
+Bridge[Node] drone_bridges mavros:"drone1";
