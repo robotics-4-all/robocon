@@ -1,5 +1,7 @@
+IMAGE_ID ?= roboconnect
+
 ONESHELL:
-.PHONY: docker
+.PHONY: docker-build
 .DEFAULT_GOAL := help
 
 define PRINT_HELP_PYSCRIPT
@@ -16,5 +18,8 @@ export PRINT_HELP_PYSCRIPT
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-docker:
-	./build.sh
+docker-build: ## Build Docker Image
+	docker build -t ${IMAGE_ID} .
+
+docker-run: ## Run Docker Container
+	docker run -it --rm -p 8080:8080 ${IMAGE_ID}

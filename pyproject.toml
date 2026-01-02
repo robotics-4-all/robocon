@@ -31,16 +31,18 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "fastapi>=0.100.0",
-    "python-multipart",
-    "aiofiles",
     "rich==13.4.2",
     "jinja2",
-    "uvicorn",
     "textX",
 ]
 
 [project.optional-dependencies]
+api = [
+    "fastapi>=0.100.0",
+    "python-multipart",
+    "aiofiles",
+    "uvicorn",
+]
 dev = ["wheel"]
 test = [
     "flake8",

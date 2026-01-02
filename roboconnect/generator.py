@@ -20,13 +20,13 @@ def _generator_ros2_impl(metamodel, model, output_path, overwrite,
 generator_ros = GeneratorDesc(
     language='roboconnect',
     target='ros',
-    description='Generate ROS Robot Bridges',
+    description='ROS-to-Broker communication bridges',
     generator=_generator_ros_impl)
 
 
 generator_ros2 = GeneratorDesc(
     language='roboconnect',
     target='ros2',
-    description='Generate ROS2 Robot Bridges',
+    description='ROS2-to-Broker communication bridges',
     generator=_generator_ros2_impl)
 

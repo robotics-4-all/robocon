@@ -1,4 +1,3 @@
-import os
 from textx import language, metamodel_from_file
 
 from .utils import get_mm
