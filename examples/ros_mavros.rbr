@@ -18,7 +18,7 @@ Robot[ROS] ROSMavros @ "drone-pc" {
         }
 }
 
-BROKER[AMQP] DroneBroker {
+Broker[AMQP] DroneBroker {
     host: "rabbitmq.cloud",
     port: 5672,
     vhost: "/drones"

@@ -16,7 +16,7 @@ Robot[ROS] MyROSRobot @ "localhost" {
         }
 }
 
-BROKER[MQTT] HomeMQTT {
+Broker[MQTT] HomeMQTT {
     host: 'localhost',
     port: 1883,
     ssl: False,

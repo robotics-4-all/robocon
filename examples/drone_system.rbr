@@ -19,7 +19,7 @@ Robot[ROS2] DroneRobot @ "px4-companion" {
         }
 }
 
-BROKER[Redis] DroneBroker {
+Broker[Redis] DroneBroker {
     host: "ground-station.local",
     port: 6379
 }

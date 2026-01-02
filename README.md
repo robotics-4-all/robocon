@@ -35,10 +35,10 @@ pip install -e .
 ### Using Docker
 ```bash
 # Build the image
-make docker
+make docker-build
 
 # Run the API/CLI container
-docker run -it roboconnect-api roboconnect --help
+make docker-run
 ```
 
 ---
@@ -70,7 +70,7 @@ Robot[ROS2] MyRobot @ "192.168.1.10" {
 Configure the target message broker.
 
 ```textx
-BROKER[MQTT] LocalBroker {
+Broker[MQTT] LocalBroker {
     host: "localhost",
     port: 1883,
     auth.username: "admin",
@@ -134,6 +134,7 @@ roboconnect gen examples/ros_model.rbr ros -o ./gen
 - `roboconnect/m2t/`: Model-to-Text transformation logic.
 - `examples/`: Collection of ROS 1 and ROS 2 system models.
 - `scripts/`: Utility scripts for bulk validation and testing.
+- `api/`: API server for model validation and code generation.
 
 ---
 

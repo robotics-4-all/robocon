@@ -21,7 +21,7 @@ Robot[ROS] ROSTurtleSim @ "localhost" {
         }
 }
 
-BROKER[MQTT] LocalBroker {
+Broker[MQTT] LocalBroker {
     host: "localhost",
     port: 1883
 }

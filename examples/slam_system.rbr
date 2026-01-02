@@ -17,7 +17,7 @@ Robot[ROS2] MappingRobot @ "mapping-pc" {
         }
 }
 
-BROKER[MQTT] MappingBroker {
+Broker[MQTT] MappingBroker {
     host: "localhost",
     port: 1883
 }

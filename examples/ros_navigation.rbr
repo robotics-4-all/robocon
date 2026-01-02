@@ -33,7 +33,7 @@ Robot[ROS] ROSNavStack @ "robot-pc" {
         }
 }
 
-BROKER[Redis] NavBroker {
+Broker[Redis] NavBroker {
     host: "10.0.0.5",
     port: 6379
 }

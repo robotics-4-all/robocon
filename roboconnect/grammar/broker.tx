@@ -1,7 +1,7 @@
 import utils
 
 MessageBroker:
-    'BROKER' '[' type=BrokerType ']' name=ID
+    'Broker' '[' type=BrokerType ']' name=ID
     ('{' properties+=Property[','] '}')?
 ;
 

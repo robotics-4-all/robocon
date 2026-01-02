@@ -32,7 +32,7 @@ class GeneratorROS:
     def generate(model: object, out_dir: str = None):
         if not path.exists(out_dir):
             mkdir(out_dir)
-        out_file = path.join(out_dir, f"{model.robot.name}_bridges.py")
+        out_file = path.join(out_dir, f"{model.robot.name}_bridge.py")
         if model.robot.type != 'ROS':
             print('[ERROR] - Did not find any ROS System definition!')
             return

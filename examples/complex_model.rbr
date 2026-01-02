@@ -21,7 +21,7 @@ Robot[ROS2] ComplexRobot @ "192.168.1.10" {
         }
 }
 
-BROKER[Redis] CloudBroker {
+Broker[Redis] CloudBroker {
     host: "cloud.example.com",
     port: 6379,
     db: 0,

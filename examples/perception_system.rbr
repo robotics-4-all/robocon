@@ -26,7 +26,7 @@ Robot[ROS2] PerceptionRobot @ "jetson-nano" {
         }
 }
 
-BROKER[AMQP] PerceptionBroker {
+Broker[AMQP] PerceptionBroker {
     host: "rabbitmq.local",
     port: 5672,
     vhost: "/robotics"
