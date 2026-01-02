@@ -29,12 +29,6 @@ def test_generation():
         console.print("[yellow]No .rbr files found in examples directory.[/yellow]")
         return
 
-    # Try to find roboconnect executable
-    roboconnect_bin = 'roboconnect'
-    venv_bin = os.path.join(os.path.dirname(sys.executable), 'roboconnect')
-    if os.path.exists(venv_bin):
-        roboconnect_bin = venv_bin
-
     table = Table(title="RoboConnect Generation & Evaluation")
     table.add_column("Example File", style="cyan")
     table.add_column("Target", justify="center")
@@ -68,7 +62,7 @@ def test_generation():
         try:
             # 1. Run Generation
             gen_result = subprocess.run(
-                [roboconnect_bin, 'gen', target, filepath, '-o', out_dir],
+                ['roboconnect', 'gen', filepath, '-o', out_dir],
                 capture_output=True,
                 text=True,
                 check=False
@@ -119,8 +113,6 @@ def test_generation():
         console.print(f"\n[bold red]Testing failed.[/bold red] {success_count} passed, {fail_count} failed.")
         # sys.exit(1) # Don't exit yet so we can clean up if needed
 
-    # Cleanup
-    # shutil.rmtree(gen_base_dir)
 
 if __name__ == "__main__":
     test_generation()

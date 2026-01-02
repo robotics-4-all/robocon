@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+{% include 'ros2_bridge_classes.py.j2' %}
+
+
+class {{ model.robot.name }}BridgeNode(Node):
+    def __init__(self):
+        super().__init__('{{ model.robot.name }}_bridge')
+        self.br_list = []
+        self._init_broker()
+        self._init_bridges()
+
+    def _init_broker(self):
+        ## Broker Connection for Bridge ------------------------------------------>
+        {% if model.broker.type == 'Redis' %}
+        self.broker_type = TransportType.REDIS
+        from commlib.transports.redis import ConnectionParameters
+        self.conn_params = ConnectionParameters(
+            host='{{ model.broker.host }}',
+            port=int({{ model.broker.port }}),
+            db={{ model.broker.db if model.broker.db is defined else 0 }},
+            username='{{ model.broker.auth.username if model.broker.auth is defined and model.broker.auth.username is defined else "" }}',
+            password='{{ model.broker.auth.password if model.broker.auth is defined and model.broker.auth.password is defined else "" }}',
+            ssl={{ model.broker.ssl if model.broker.ssl is defined else False }}
+        )
+        {% elif model.broker.type == 'AMQP' %}
+        self.broker_type = TransportType.AMQP
+        from commlib.transports.amqp import ConnectionParameters
+        self.conn_params = ConnectionParameters(
+            host='{{ model.broker.host }}',
+            port={{ model.broker.port }},
+            vhost='{{ model.broker.vhost if model.broker.vhost is defined else "/" }}',
+            username='{{ model.broker.auth.username if model.broker.auth is defined and model.broker.auth.username is defined else "" }}',
+            password='{{ model.broker.auth.password if model.broker.auth is defined and model.broker.auth.password is defined else "" }}',
+            ssl={{ model.broker.ssl if model.broker.ssl is defined else False }}
+        )
+        {% elif model.broker.type == 'MQTT' %}
+        self.broker_type = TransportType.MQTT
+        from commlib.transports.mqtt import ConnectionParameters
+        self.conn_params = ConnectionParameters(
+            host='{{ model.broker.host }}',
+            port={{ model.broker.port }},
+            username='{{ model.broker.auth.username if model.broker.auth is defined and model.broker.auth.username is defined else "" }}',
+            password='{{ model.broker.auth.password if model.broker.auth is defined and model.broker.auth.password is defined else "" }}',
+            ssl={{ model.broker.ssl if model.broker.ssl is defined else False }}
+        )
+        {% endif %}
+
+    def _init_bridges(self):
+        {% for bridge in model.bridges %}
+        ## <-----------------------------------------------------------------------
+        {% if bridge.__class__.__name__=='TopicBridge' and bridge.direction=='B2R' %}
+        ## Topic Bridge B2R
+        from {{ bridge.topic.msg.split('/')[0] }}.msg import {{ bridge.topic.msg.split('/')[1] }}
+        br = B2RTopicBridge(self, '{{ bridge.topic.uri }}', {{ bridge.topic.msg.split('/')[1] }}, self.broker_type, '{{ bridge.brokerURI }}', self.conn_params)
+        self.br_list.append(br)
+        {% elif bridge.__class__.__name__=='TopicBridge' and bridge.direction=='R2B' %}
+        ## Topic Bridge R2B
+        from {{ bridge.topic.msg.split('/')[0] }}.msg import {{ bridge.topic.msg.split('/')[1] }}
+        br = R2BTopicBridge(self, '{{ bridge.topic.uri }}', {{ bridge.topic.msg.split('/')[1] }}, self.broker_type, '{{ bridge.brokerURI }}', self.conn_params)
+        self.br_list.append(br)
+        {% elif bridge.__class__.__name__=='ServiceBridge' and bridge.direction=='B2R' %}
+        ## RPC Bridge B2R
+        from {{ bridge.service.msg.split('/')[0] }}.srv import {{ bridge.service.msg.split('/')[1] }}
+        br = B2RServiceBridge(self, '{{ bridge.service.uri }}', {{ bridge.service.msg.split('/')[1] }}, self.broker_type, '{{ bridge.brokerURI }}', self.conn_params)
+        self.br_list.append(br)
+        {% endif %}
+        {% endfor %}
+        ## <-----------------------------------------------------------------------
+
+
+def main():
+    rclpy.init()
+    node = {{ model.robot.name }}BridgeNode()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

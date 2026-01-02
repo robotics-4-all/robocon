@@ -19,7 +19,7 @@ jinja_env = jinja2.Environment(
 
 
 class GeneratorROS:
-    bridge_tpl = jinja_env.get_template('ros_bridge.j2')
+    bridge_tpl = jinja_env.get_template('ros_bridge.py.j2')
     reqs_tpl = jinja_env.get_template('requirements.txt.j2')
     srcgen_folder = path.join(getcwd(), 'gen')
     
