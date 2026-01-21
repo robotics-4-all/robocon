@@ -2,8 +2,8 @@ import click
 import os
 from rich import print, pretty
 
-from roboconnect.generator import GeneratorROS2, GeneratorROS
-from roboconnect.utils import build_model
+from robocon.generator import GeneratorROS2, GeneratorROS
+from robocon.utils import build_model
 
 pretty.install()
 
@@ -55,4 +55,4 @@ def generate_code(ctx, model_path, generator, out_dir):
 
 
 def main():
-    cli(prog_name="roboconnect")
+    cli(prog_name="robocon")

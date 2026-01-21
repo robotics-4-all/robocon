@@ -1,6 +1,6 @@
-# RoboConnect
+# Robocon
 
-**RoboConnect** is a powerful Domain-Specific Language (DSL) designed to simplify the integration of ROS (Robot Operating System) and ROS 2 systems with IoT and Smart Environment infrastructures. It provides a high-level, declarative syntax to define communication bridges between robotics middleware and message brokers like MQTT, Redis, and AMQP.
+**Robocon** is a powerful Domain-Specific Language (DSL) designed to simplify the integration of ROS (Robot Operating System) and ROS 2 systems with IoT and Smart Environment infrastructures. It provides a high-level, declarative syntax to define communication bridges between robotics middleware and message brokers like MQTT, Redis, and AMQP.
 
 ---
 
@@ -25,8 +25,8 @@
 ### From Source
 ```bash
 # Clone the repository
-git clone https://github.com/robotics-4-all/RoboConnect.git
-cd RoboConnect
+git clone https://github.com/robotics-4-all/Robocon.git
+cd Robocon
 
 # Install in editable mode
 pip install -e .
@@ -105,12 +105,12 @@ Bridge[Node] controller_bridges base_controller:"robot";
 
 ## 💻 CLI Usage
 
-RoboConnect comes with a command-line interface for managing your models.
+Robocon comes with a command-line interface for managing your models.
 
 ### Validate a Model
 Verify the syntax and references in your `.rbr` file.
 ```bash
-roboconnect validate examples/complex_model.rbr
+robocon validate examples/complex_model.rbr
 ```
 
 ### Generate Code
@@ -118,20 +118,20 @@ Generate the Python bridge implementation. The generator is automatically detect
 
 ```bash
 # Auto-detect from model (recommended)
-roboconnect gen examples/complex_model.rbr -o ./gen
+robocon gen examples/complex_model.rbr -o ./gen
 
 # Explicitly specify generator (optional)
-roboconnect gen examples/complex_model.rbr ros2 -o ./gen
-roboconnect gen examples/ros_model.rbr ros -o ./gen
+robocon gen examples/complex_model.rbr ros2 -o ./gen
+robocon gen examples/ros_model.rbr ros -o ./gen
 ```
 
 ---
 
 ## 📂 Project Structure
 
-- `roboconnect/grammar/`: textX grammar definitions (`.tx`).
-- `roboconnect/templates/`: Jinja2 templates for code generation (`.j2`).
-- `roboconnect/m2t/`: Model-to-Text transformation logic.
+- `robocon/grammar/`: textX grammar definitions (`.tx`).
+- `robocon/templates/`: Jinja2 templates for code generation (`.j2`).
+- `robocon/m2t/`: Model-to-Text transformation logic.
 - `examples/`: Collection of ROS 1 and ROS 2 system models.
 - `scripts/`: Utility scripts for bulk validation and testing.
 - `api/`: API server for model validation and code generation.
@@ -140,7 +140,54 @@ roboconnect gen examples/ros_model.rbr ros -o ./gen
 
 ## 🧪 Testing & Quality Assurance
 
-We provide automated scripts to ensure model validity and generator correctness.
+Robocon has a comprehensive test suite with **96%+ code coverage** using pytest.
+
+### Running Tests
+
+```bash
+# Install test dependencies
+pip install -e ".[test]"
+
+# Run all tests
+pytest tests/
+
+# Run tests with coverage report
+pytest tests/ --cov=robocon --cov-report=term-missing
+
+# Run tests with HTML coverage report
+pytest tests/ --cov=robocon --cov-report=html
+# Open htmlcov/index.html in your browser
+
+# Run tests in Docker container (requires Docker)
+make test
+
+# Run specific test modules
+pytest tests/test_utils.py -v
+pytest tests/test_m2t/ -v
+pytest tests/integration/ -v
+```
+
+### Test Structure
+
+```
+tests/
+├── conftest.py              # Shared fixtures and test configuration
+├── test_language.py         # Language and metamodel tests
+├── test_utils.py            # Utility functions and processors
+├── test_generator.py        # Generator entry points
+├── test_cli.py              # CLI commands
+├── test_api.py              # FastAPI endpoints
+├── test_m2t/                # Model-to-text transformation tests
+│   ├── test_rosgen.py      # ROS code generator tests
+│   └── test_ros2gen.py     # ROS2 code generator tests
+└── integration/             # End-to-end integration tests
+    ├── test_examples.py    # Tests using example models
+    └── test_end_to_end.py  # Complete workflow tests
+```
+
+### Example Validation & Generation
+
+We also provide automated scripts to ensure model validity and generator correctness.
 
 - **Validate All Examples**:
   ```bash

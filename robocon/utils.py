@@ -2,7 +2,7 @@ from os.path import dirname, join
 from textx import metamodel_from_file
 import textx.scoping.providers as scoping_providers
 
-from roboconnect.definitions import GRAMMAR_DIR
+from robocon.definitions import GRAMMAR_DIR
 
 
 class Config:
@@ -94,7 +94,7 @@ def model_processor(model, metamodel):
 
 def get_mm(debug=False, global_scope=True):
     mm= metamodel_from_file(
-        join(GRAMMAR_DIR, 'roboconnect.tx'),
+        join(GRAMMAR_DIR, 'robocon.tx'),
         global_repository=global_scope,
         debug=debug
     )
@@ -148,5 +148,5 @@ def build_model(model_fpath):
 
 
 def get_grammar(debug=False):
-    with open(join(GRAMMAR_DIR, 'roboconnect.tx')) as f:
+    with open(join(GRAMMAR_DIR, 'robocon.tx')) as f:
         return f.read()

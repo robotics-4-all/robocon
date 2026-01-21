@@ -1,4 +1,4 @@
-IMAGE_ID ?= roboconnect
+IMAGE_ID ?= robocon
 
 ONESHELL:
 .PHONY: docker-build
@@ -23,3 +23,9 @@ docker-build: ## Build Docker Image
 
 docker-run: ## Run Docker Container
 	docker run -it --rm -p 8080:8080 ${IMAGE_ID}
+
+test: docker-test ## Run tests in Docker container (alias for docker-test)
+
+docker-test: ## Build Docker image and run tests inside container
+	docker build -t ${IMAGE_ID}-test --target test -f Dockerfile.test .
+	docker run --rm ${IMAGE_ID}-test

@@ -3,16 +3,16 @@ requires = ["setuptools>=61.0", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "roboconnect"
+name = "robocon"
 dynamic = ["version"]
 description = "A Domain-specific Language for Bridging ROS and ROS2 robotics systems to the IoT and Smart Environments systems."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
     {name = "Konstantinos Panayiotou", email = "klpanagi@gmail.com"}
 ]
-keywords = ["textX", "roboconnect", "ros", "ros2", "bridge"]
+keywords = ["textX", "roboconnect", "ros", "ros2", "bridge", "iot", "smart environments"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -23,8 +23,6 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -34,6 +32,7 @@ dependencies = [
     "rich==13.4.2",
     "jinja2",
     "textX",
+    "click"
 ]
 
 [project.optional-dependencies]
@@ -50,27 +49,61 @@ test = [
     "coverage",
     "coveralls",
     "pytest",
+    "pytest-cov",
+    "pytest-mock",
 ]
 
 [project.urls]
 Homepage = "https://github.com/robotics-4-all/RoboConnect"
 
 [project.scripts]
-roboconnect = "roboconnect.cli:main"
+robocon = "robocon.cli:main"
 
 [project.entry-points."textx_languages"]
-roboconnect = "roboconnect:roboconnect_language"
+robocon = "robocon:robocon_language"
 
 [project.entry-points."textx_generators"]
-roboconnect_ros = "roboconnect.generator:generator_ros"
-roboconnect_ros2 = "roboconnect.generator:generator_ros2"
+robocon_ros = "robocon.generator:generator_ros"
+robocon_ros2 = "robocon.generator:generator_ros2"
 
 [tool.setuptools]
-packages = {find = {include = ["roboconnect*"]}}
+packages = {find = {include = ["robocon*"]}}
 include-package-data = true
 
 [tool.setuptools.package-data]
 "*" = ["*.tx", "*.j2"]
 
 [tool.setuptools.dynamic]
-version = {attr = "roboconnect.__version__"}
+version = {attr = "robocon.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=robocon",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=80",
+    "-v"
+]
+
+[tool.coverage.run]
+source = ["robocon"]
+omit = [
+    "*/tests/*",
+    "*/venv/*",
+    "*/__pycache__/*",
+    "*/build/*",
+    "*/templates/*.j2",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

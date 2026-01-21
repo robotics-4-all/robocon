@@ -10,8 +10,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 
-from roboconnect.utils import build_model
-from roboconnect.definitions import TMP_DIR
+from robocon.utils import build_model
+from robocon.definitions import TMP_DIR
 
 API_KEY = os.getenv("API_KEY", "123123")
 
@@ -51,7 +51,7 @@ class Model(BaseModel):
 
 @api.post("/validate")
 async def validate(model: Model, api_key: str = Security(get_api_key)):
-    text = model.model
+    text = model.model_str
     name = model.name
     if len(text) == 0:
         return 404

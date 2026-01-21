@@ -4,7 +4,7 @@ from os import path, mkdir, getcwd, chmod
 
 import jinja2
 
-from roboconnect.utils import build_model
+from robocon.utils import build_model
 
 _THIS_DIR = path.abspath(path.dirname(__file__))
 
