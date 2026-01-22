@@ -42,7 +42,7 @@ api = [
     "aiofiles",
     "uvicorn",
 ]
-dev = ["wheel"]
+dev = ["wheel", "bump2version"]
 test = [
     "flake8",
     "tox",
