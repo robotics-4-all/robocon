@@ -1,0 +1,80 @@
+# NodeBridge Features Example
+# This example demonstrates all the new NodeBridge capabilities:
+# - Optional prefix
+# - Custom topic/service/action URI mappings
+# - Mixed configurations
+
+Robot[ROS] AdvancedRobot @ "localhost" {
+    TOPICS
+        status [ "std_msgs/String", "/robot/status" ]
+        diagnostics [ "diagnostic_msgs/DiagnosticArray", "/robot/diagnostics" ]
+        camera [ "sensor_msgs/Image", "/robot/camera/image" ]
+        lidar [ "sensor_msgs/LaserScan", "/robot/lidar/scan" ]
+        cmd_vel [ "geometry_msgs/Twist", "/robot/cmd_vel" ]
+        emergency_stop [ "std_msgs/Bool", "/robot/emergency_stop" ]
+
+    SERVICES
+        reset [ "std_srvs/Empty", "/robot/reset" ]
+        calibrate [ "std_srvs/Trigger", "/robot/calibrate" ]
+        set_mode [ "std_srvs/SetBool", "/robot/set_mode" ]
+
+    ACTIONS
+        navigate [ "move_base_msgs/MoveBase", "/robot/navigate" ]
+        pick [ "manipulation_msgs/PickPlace", "/robot/pick" ]
+
+    NODES
+        # Main robot controller
+        controller {
+            uri: "/robot/controller"
+            publishes: [ status, diagnostics ]
+            subscribes: [ cmd_vel, emergency_stop ]
+            services: [ reset, calibrate, set_mode ]
+            actions: [ navigate, pick ]
+        }
+
+        # Sensor node
+        sensors {
+            uri: "/robot/sensors"
+            publishes: [ camera, lidar ]
+        }
+}
+
+Broker[MQTT] CloudBroker {
+    host: "mqtt.example.com",
+    port: 8883
+}
+
+# Example 1: NodeBridge with prefix only (backward compatible)
+# All topics/services/actions will use the prefix
+Bridge[Node] basic_bridge controller:"robot/main";
+
+# Example 2: NodeBridge without prefix
+# All topics/services/actions use their names directly
+Bridge[Node] no_prefix_bridge sensors;
+
+# Example 3: NodeBridge with custom topic mappings
+# Some topics get custom URIs, others use the prefix
+Bridge[Node] custom_bridge controller:"robot/ctrl" {
+    topic_maps: {
+        status: "telemetry/robot/health/status",
+        diagnostics: "telemetry/robot/health/diagnostics",
+        cmd_vel: "commands/robot/velocity"
+    }
+    service_maps: {
+        reset: "services/robot/emergency/reset",
+        calibrate: "services/robot/maintenance/calibrate"
+    }
+    action_maps: {
+        navigate: "actions/robot/navigation/move_to_goal",
+        pick: "actions/robot/manipulation/pick_object"
+    }
+};
+
+# Example 4: NodeBridge without prefix but with custom mappings
+# Unmapped items use their name directly (no prefix)
+Bridge[Node] selective_mapping sensors {
+    topic_maps: {
+        camera: "perception/vision/front_camera",
+        lidar: "perception/range/main_lidar"
+    }
+};

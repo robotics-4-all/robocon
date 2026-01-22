@@ -31,5 +31,17 @@ Broker[MQTT] LocalBroker {
     port: 1883
 }
 
-# Bridge all endpoints of turtlesim_node
-Bridge[Node] turtle_bridges turtlesim_node:"turtle1";
+# Bridge turtlesim_node with custom topic mappings
+# Demonstrates: partial topic mapping with remaining topics using prefix
+Bridge[Node] turtle_bridges turtlesim_node:"turtle1" {
+    topic_maps: {
+        pose: "robot/turtle/state/position"
+    }
+    service_maps: {
+        reset: "robot/turtle/actions/reset"
+    }
+};
+
+# Bridge teleop_key without prefix - uses topic name directly
+Bridge[Node] teleop_bridge teleop_key;
+

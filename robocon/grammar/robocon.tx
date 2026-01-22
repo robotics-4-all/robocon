@@ -75,7 +75,37 @@ TFBridge:
 TFEndpoint: ros=[ROSTopic] | broker=STRING;
 
 NodeBridge:
-    'Bridge' '[' 'Node' ']' name=ID node=[ROSNode] ':' prefix=STRING ';'
+    'Bridge' '[' 'Node' ']' name=ID node=[ROSNode] (':' prefix=STRING)?
+    ('{'
+        (topic_maps=TopicMapList)?
+        (service_maps=ServiceMapList)?
+        (action_maps=ActionMapList)?
+    '}')?
+    ';'
+;
+
+TopicMapList:
+    'topic_maps' ':' '{' mappings*=TopicMapping[','] '}'
+;
+
+TopicMapping:
+    topic=[ROSTopic] ':' broker_uri=STRING
+;
+
+ServiceMapList:
+    'service_maps' ':' '{' mappings*=ServiceMapping[','] '}'
+;
+
+ServiceMapping:
+    service=[ROSService] ':' broker_uri=STRING
+;
+
+ActionMapList:
+    'action_maps' ':' '{' mappings*=ActionMapping[','] '}'
+;
+
+ActionMapping:
+    action=[ROSAction] ':' broker_uri=STRING
 ;
 // <--------------------------------------------------------------------
 

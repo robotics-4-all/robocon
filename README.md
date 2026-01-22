@@ -91,15 +91,46 @@ Bridge[Service] reset_bridge "robot/reset":reset;
 
 #### The NodeBridge (Recommended)
 Automatically bridge all endpoints defined in a `ROSNode`.
-- `publishes` -> `R2B` Topic Bridge
-- `subscribes` -> `B2R` Topic Bridge
-- `services` -> `B2R` Service Bridge
-- `actions` -> `B2R` Action Bridge
+- `publishes` → `R2B` Topic Bridge
+- `subscribes` → `B2R` Topic Bridge
+- `services` → `B2R` Service Bridge
+- `actions` → `B2R` Action Bridge
 
+**Basic Usage (with prefix):**
 ```textx
 # Bridges everything in base_controller with a "robot" prefix
+# Topics: robot/odom, robot/cmd_vel
+# Services: robot/reset
 Bridge[Node] controller_bridges base_controller:"robot";
 ```
+
+**Without Prefix:**
+```textx
+# Uses topic/service/action names directly (no prefix)
+Bridge[Node] my_bridge base_controller;
+```
+
+**Custom URI Mappings:**
+Override the default prefix-based URIs with custom broker URIs for specific topics, services, or actions:
+
+```textx
+Bridge[Node] advanced_bridge base_controller:"robot" {
+    topic_maps: {
+        odom: "telemetry/robot/odometry",
+        cmd_vel: "commands/robot/velocity"
+    },
+    service_maps: {
+        reset: "services/robot/emergency_reset"
+    }
+};
+# Result:
+# - odom → "telemetry/robot/odometry" (custom)
+# - cmd_vel → "commands/robot/velocity" (custom)
+# - reset → "services/robot/emergency_reset" (custom)
+# - Other unmapped items use prefix: "robot/{name}"
+```
+
+See `examples/nodebridge_features.rbr` for comprehensive examples.
 
 ---
 

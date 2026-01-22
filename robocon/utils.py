@@ -50,7 +50,24 @@ def model_processor(model, metamodel):
     for bridge in model.bridges:
         if bridge.__class__.__name__ == 'NodeBridge':
             node = bridge.node
-            prefix = bridge.prefix
+            prefix = bridge.prefix if hasattr(bridge, 'prefix') and bridge.prefix else ""
+            
+            # Build mapping dictionaries
+            topic_map = {}
+            if hasattr(bridge, 'topic_maps') and bridge.topic_maps and hasattr(bridge.topic_maps, 'mappings'):
+                for mapping in bridge.topic_maps.mappings:
+                    topic_map[mapping.topic.name] = mapping.broker_uri
+            
+            service_map = {}
+            if hasattr(bridge, 'service_maps') and bridge.service_maps and hasattr(bridge.service_maps, 'mappings'):
+                for mapping in bridge.service_maps.mappings:
+                    service_map[mapping.service.name] = mapping.broker_uri
+            
+            action_map = {}
+            if hasattr(bridge, 'action_maps') and bridge.action_maps and hasattr(bridge.action_maps, 'mappings'):
+                for mapping in bridge.action_maps.mappings:
+                    action_map[mapping.action.name] = mapping.broker_uri
+            
             # Expand publishes -> R2B TopicBridge
             for topic in getattr(node, 'publishes', []):
                 tb = metamodel['TopicBridge']()
@@ -58,8 +75,13 @@ def model_processor(model, metamodel):
                 tb.direction = 'R2B'
                 tb.ros_endpoint = topic
                 tb.topic = topic
-                tb.brokerURI = f"{prefix}/{topic.name}" if prefix else topic.name
+                # Use custom mapping if provided, otherwise use prefix
+                if topic.name in topic_map:
+                    tb.brokerURI = topic_map[topic.name]
+                else:
+                    tb.brokerURI = f"{prefix}/{topic.name}" if prefix else topic.name
                 new_bridges.append(tb)
+            
             # Expand subscribes -> B2R TopicBridge
             for topic in getattr(node, 'subscribes', []):
                 tb = metamodel['TopicBridge']()
@@ -67,8 +89,13 @@ def model_processor(model, metamodel):
                 tb.direction = 'B2R'
                 tb.ros_endpoint = topic
                 tb.topic = topic
-                tb.brokerURI = f"{prefix}/{topic.name}" if prefix else topic.name
+                # Use custom mapping if provided, otherwise use prefix
+                if topic.name in topic_map:
+                    tb.brokerURI = topic_map[topic.name]
+                else:
+                    tb.brokerURI = f"{prefix}/{topic.name}" if prefix else topic.name
                 new_bridges.append(tb)
+            
             # Expand services -> B2R ServiceBridge
             for service in getattr(node, 'services', []):
                 sb = metamodel['ServiceBridge']()
@@ -76,8 +103,13 @@ def model_processor(model, metamodel):
                 sb.direction = 'B2R'
                 sb.ros_endpoint = service
                 sb.service = service
-                sb.brokerURI = f"{prefix}/{service.name}" if prefix else service.name
+                # Use custom mapping if provided, otherwise use prefix
+                if service.name in service_map:
+                    sb.brokerURI = service_map[service.name]
+                else:
+                    sb.brokerURI = f"{prefix}/{service.name}" if prefix else service.name
                 new_bridges.append(sb)
+            
             # Expand actions -> B2R ActionBridge
             for action in getattr(node, 'actions', []):
                 ab = metamodel['ActionBridge']()
@@ -85,7 +117,11 @@ def model_processor(model, metamodel):
                 ab.direction = 'B2R'
                 ab.ros_endpoint = action
                 ab.action = action
-                ab.brokerURI = f"{prefix}/{action.name}" if prefix else action.name
+                # Use custom mapping if provided, otherwise use prefix
+                if action.name in action_map:
+                    ab.brokerURI = action_map[action.name]
+                else:
+                    ab.brokerURI = f"{prefix}/{action.name}" if prefix else action.name
                 new_bridges.append(ab)
         else:
             new_bridges.append(bridge)
@@ -132,6 +168,9 @@ def get_mm(debug=False, global_scope=True):
             "ROSNode.subscribes": scoping_providers.PlainName(),
             "ROSNode.services": scoping_providers.PlainName(),
             "ROSNode.actions": scoping_providers.PlainName(),
+            "TopicMapping.topic": scoping_providers.PlainName(),
+            "ServiceMapping.service": scoping_providers.PlainName(),
+            "ActionMapping.action": scoping_providers.PlainName(),
         }
     )
 
