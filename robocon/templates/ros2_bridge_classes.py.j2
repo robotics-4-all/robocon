@@ -71,7 +71,7 @@ class B2RServiceBridge:
 
 class B2RTopicBridge:
 
-    def __init__(self, nh, ros_topic: str, msg_type: Any, broker_type: Any, broker_uri, broker_conn_params, transform=None):
+    def __init__(self, nh, ros_topic: str, msg_type: Any, broker_type: Any, broker_uri, broker_conn_params, transform=None, condition=None, condition_type=None):
         self.nh = nh
         self.ros_topic = ros_topic
         self.broker_uri = broker_uri
@@ -79,6 +79,8 @@ class B2RTopicBridge:
         self.broker_type = broker_type
         self.broker_conn_params = broker_conn_params
         self.transform = transform
+        self.condition = condition
+        self.condition_type = condition_type
 
         self._init_ros_endpoint()
         self._init_broker_endpoint()
@@ -96,6 +98,19 @@ class B2RTopicBridge:
         self.bsub.run()
 
     def on_msg(self, data):
+        # Check condition first
+        if self.condition is not None:
+            context = DotDict(data)
+            try:
+                condition_met = eval(self.condition, {"msg": context, "data": context})
+                should_forward = condition_met if self.condition_type == 'when' else not condition_met
+                if not should_forward:
+                    self.nh.get_logger().debug(f"Message filtered out by '{self.condition_type}' condition")
+                    return
+            except Exception as e:
+                self.nh.get_logger().error(f"Condition evaluation error: {e}")
+                return
+        
         if self.transform:
             context = DotDict(data)
             transformed_data = {}
@@ -112,7 +127,7 @@ class B2RTopicBridge:
 
 class R2BTopicBridge:
 
-    def __init__(self, nh, ros_topic: str, msg_type: Any, broker_type: Any, broker_uri, broker_conn_params, transform=None):
+    def __init__(self, nh, ros_topic: str, msg_type: Any, broker_type: Any, broker_uri, broker_conn_params, transform=None, condition=None, condition_type=None):
         self.nh = nh
         self.ros_topic = ros_topic
         self.broker_uri = broker_uri
@@ -120,6 +135,8 @@ class R2BTopicBridge:
         self.broker_type = broker_type
         self.broker_conn_params = broker_conn_params
         self.transform = transform
+        self.condition = condition
+        self.condition_type = condition_type
 
         self._init_ros_endpoint()
         self._init_broker_endpoint()
@@ -140,6 +157,20 @@ class R2BTopicBridge:
 
     def on_msg(self, msg):
         _data = ros2_msg_to_dict(msg)
+        
+        # Check condition first
+        if self.condition is not None:
+            context = DotDict(_data)
+            try:
+                condition_met = eval(self.condition, {"msg": context, "data": context})
+                should_forward = condition_met if self.condition_type == 'when' else not condition_met
+                if not should_forward:
+                    self.nh.get_logger().debug(f"Message filtered out by '{self.condition_type}' condition")
+                    return
+            except Exception as e:
+                self.nh.get_logger().error(f"Condition evaluation error: {e}")
+                return
+        
         if self.transform:
             context = DotDict(_data)
             transformed_data = {}

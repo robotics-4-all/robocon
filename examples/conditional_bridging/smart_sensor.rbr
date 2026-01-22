@@ -1,0 +1,49 @@
+// Smart IoT Data Filtering Example
+// Demonstrates conditional bridging to reduce cloud bandwidth and costs
+
+Robot[ROS] SmartSensor @ "localhost" {
+    TOPICS
+        diagnostics ["std_msgs/String", "/diagnostics"]
+        temperature ["std_msgs/Float32", "/sensors/temperature"]
+        vibration ["std_msgs/Float32", "/sensors/vibration"]
+        battery ["std_msgs/Float32", "/battery/voltage"]
+        status ["std_msgs/String", "/system/status"]
+}
+
+Broker[MQTT] CloudBroker {
+    host: "iot.cloud.com",
+    port: 8883,
+    ssl: True,
+    auth.username: "sensor_device_01",
+    auth.password: "secure_pass"
+}
+
+// Only forward critical diagnostic messages (ERROR or FATAL)
+Bridge[Topic] critical_diagnostics diagnostics : "alerts/critical" {
+    when: "msg.data == 'ERROR' or msg.data == 'FATAL'"
+};
+
+// Only send temperature readings above threshold
+Bridge[Topic] high_temp_alerts temperature : "alerts/temperature" {
+    when: "msg.data > 85.0"
+};
+
+// Filter out test/debug status messages
+Bridge[Topic] production_status status : "system/status" {
+    unless: "msg.data.startswith('DEBUG') or msg.data.startswith('TEST')"
+};
+
+// Only forward abnormal vibration readings
+Bridge[Topic] vibration_alerts vibration : "alerts/vibration" {
+    when: "msg.data > 2.5 or msg.data < 0.1"
+};
+
+// Only send low battery alerts (below 20%)
+Bridge[Topic] low_battery_alerts battery : "alerts/battery" {
+    when: "msg.data < 11.0"
+    transform: {
+        voltage: "msg.data",
+        percentage: "round((msg.data / 12.0) * 100, 1)",
+        severity: "'CRITICAL' if msg.data < 10.0 else 'WARNING'"
+    }
+};

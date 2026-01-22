@@ -63,26 +63,12 @@ cd examples/transformations
 robocon-cli generate temp_monitor.rbr --target ros --output generated/
 ```
 
-### 2. Install Dependencies
-```bash
-cd generated/
-pip install -r requirements.txt
-```
-
-### 3. Configure Environment
-Create a `.env` file or export:
-```bash
-export MQTT_HOST=mqtt.example.com
-export MQTT_USER=robot_01
-export MQTT_PASS=secret123
-```
-
-### 4. Run the Bridge
+### 2. Run the Bridge
 ```bash
 python TempMonitorBot_bridge.py
 ```
 
-## Expected Output
+### 3. Expected Output
 
 The bridge will:
 - Subscribe to MQTT topic `sensors/temp` and receive transformed data like:

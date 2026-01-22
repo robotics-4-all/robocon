@@ -44,12 +44,35 @@ def bridge_processor(bridge):
     # For template compatibility
     if bridge.__class__.__name__ == 'TopicBridge':
         bridge.topic = bridge.ros_endpoint
+        
         # Handle transformations
         bridge.has_transform = hasattr(bridge, 'transforms') and len(bridge.transforms) > 0
         if bridge.has_transform:
             bridge.transform_dict = {t.target: t.expression for t in bridge.transforms}
         else:
             bridge.transform_dict = {}
+        
+        # Handle conditional filtering
+        # Validate mutual exclusivity
+        has_when = hasattr(bridge, 'when') and bridge.when is not None
+        has_unless = hasattr(bridge, 'unless') and bridge.unless is not None
+        
+        if has_when and has_unless:
+            raise TextXSemanticError(
+                "Bridge cannot have both 'when' and 'unless' clauses. Use only one."
+            )
+        
+        bridge.has_condition = has_when or has_unless
+        if has_when:
+            bridge.condition_type = 'when'
+            bridge.condition = bridge.when.condition
+        elif has_unless:
+            bridge.condition_type = 'unless'
+            bridge.condition = bridge.unless.condition
+        else:
+            bridge.condition_type = None
+            bridge.condition = None
+            
     elif bridge.__class__.__name__ == 'ServiceBridge':
         bridge.service = bridge.ros_endpoint
     elif bridge.__class__.__name__ == 'ActionBridge':

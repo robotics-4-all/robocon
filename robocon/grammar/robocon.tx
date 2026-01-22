@@ -53,6 +53,8 @@ Bridge: TopicBridge | ServiceBridge | ActionBridge | TFBridge | NodeBridge;
 TopicBridge:
     'Bridge' '[' 'Topic' ']' name=ID lhs=TopicEndpoint ':' rhs=TopicEndpoint
     ('{'
+        (when=WhenClause)?
+        (unless=UnlessClause)?
         ('transform' ':' '{' transforms*=Transformation[','] '}')?
     '}')?
     ';'
@@ -60,6 +62,14 @@ TopicBridge:
 
 Transformation:
     target=ID ':' expression=STRING
+;
+
+WhenClause:
+    'when' ':' condition=STRING
+;
+
+UnlessClause:
+    'unless' ':' condition=STRING
 ;
 
 
