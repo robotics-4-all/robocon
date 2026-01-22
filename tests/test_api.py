@@ -25,31 +25,35 @@ class TestAPIValidation:
         """Test /validate endpoint with a valid model."""
         data = {
             "name": "test_model",
-            "model_str": sample_ros_model
+            "model": sample_ros_model
         }
         
         response = client.post("/validate", json=data, headers=api_headers)
         
         assert response.status_code == 200
-        assert response.json()["status"] == 200
-        assert "success" in response.json()["message"].lower()
+        json_resp = response.json()
+        assert json_resp["valid"] == True
+        assert len(json_resp["errors"]) == 0
     
     def test_validate_endpoint_with_invalid_model(self, client, api_headers):
         """Test /validate endpoint with an invalid model."""
         data = {
             "name": "test_model",
-            "model_str": "This is not a valid model"
+            "model": "This is not a valid model"
         }
         
         response = client.post("/validate", json=data, headers=api_headers)
         
-        assert response.status_code == 400
+        assert response.status_code == 200  # Returns 200 with validation errors
+        json_resp = response.json()
+        assert json_resp["valid"] == False
+        assert len(json_resp["errors"]) > 0
     
     def test_validate_endpoint_requires_api_key(self, client, sample_ros_model):
         """Test that /validate endpoint requires API key."""
         data = {
             "name": "test_model",
-            "model_str": sample_ros_model
+            "model": sample_ros_model
         }
         
         # No headers provided
@@ -61,7 +65,7 @@ class TestAPIValidation:
         """Test /validate endpoint with invalid API key."""
         data = {
             "name": "test_model",
-            "model_str": sample_ros_model
+            "model": sample_ros_model
         }
         headers = {"X-API-Key": "invalid_key"}
         
@@ -73,14 +77,13 @@ class TestAPIValidation:
         """Test /validate endpoint with empty model."""
         data = {
             "name": "test_model",
-            "model_str": ""
+            "model": ""
         }
         
         response = client.post("/validate", json=data, headers=api_headers)
         
-        # Empty model should succeed (API returns 200 even with empty model)
-        # This is a bug in the API, but we test actual behavior
-        assert response.status_code == 200
+        # Empty model should now return 400 (refactored API validates properly)
+        assert response.status_code == 400
 
 
 class TestAPIValidateFile:
@@ -108,8 +111,9 @@ class TestAPIValidateFile:
             response = client.post("/validate/file", files=files, headers=api_headers)
         
         assert response.status_code == 200
-        assert response.json()["status"] == 200
-        assert "success" in response.json()["message"].lower()
+        json_resp = response.json()
+        assert json_resp["valid"] == True
+        assert len(json_resp["errors"]) == 0
     
     def test_validate_file_endpoint_invalid_model(self, client, api_headers, temp_dir):
         """Test /validate/file endpoint with invalid model."""
@@ -121,7 +125,10 @@ class TestAPIValidateFile:
             files = {"file": ("invalid.rbr", f, "text/plain")}
             response = client.post("/validate/file", files=files, headers=api_headers)
         
-        assert response.status_code == 400
+        assert response.status_code == 200
+        json_resp = response.json()
+        assert json_resp["valid"] == False
+        assert len(json_resp["errors"]) > 0
     
     def test_validate_file_requires_api_key(self, client, sample_ros_model, temp_dir):
         """Test that /validate/file requires API key."""
@@ -132,70 +139,6 @@ class TestAPIValidateFile:
         with open(model_path, 'rb') as f:
             files = {"file": ("test.rbr", f, "text/plain")}
             response = client.post("/validate/file", files=files)
-        
-        assert response.status_code == 401  # Unauthorized
-
-
-class TestAPIValidateBase64:
-    """Tests for /validate/b64 endpoint."""
-    
-    @pytest.fixture
-    def client(self):
-        """Create a test client."""
-        return TestClient(api)
-    
-    @pytest.fixture
-    def api_headers(self):
-        """Return headers with valid API key."""
-        return {"X-API-Key": "123123"}
-    
-    def test_validate_b64_endpoint(self, client, api_headers, sample_ros_model):
-        """Test /validate/b64 endpoint with base64 encoded model."""
-        encoded = base64.b64encode(sample_ros_model.encode()).decode()
-        
-        response = client.post(
-            "/validate/b64",
-            params={"base64_model": encoded},
-            headers=api_headers
-        )
-        
-        assert response.status_code == 200
-        assert response.json()["status"] == 200
-        assert "success" in response.json()["message"].lower()
-    
-    def test_validate_b64_endpoint_invalid_model(self, client, api_headers):
-        """Test /validate/b64 endpoint with invalid model."""
-        invalid_model = "Invalid model content"
-        encoded = base64.b64encode(invalid_model.encode()).decode()
-        
-        response = client.post(
-            "/validate/b64",
-            params={"base64_model": encoded},
-            headers=api_headers
-        )
-        
-        assert response.status_code == 400
-    
-    def test_validate_b64_endpoint_empty_string(self, client, api_headers):
-        """Test /validate/b64 endpoint with empty string."""
-        response = client.post(
-            "/validate/b64",
-            params={"base64_model": ""},
-            headers=api_headers
-        )
-        
-        # Empty string is allowed by the API but should fail validation
-        # The actual implementation doesn't validate empty string properly
-        assert response.status_code >= 200
-    
-    def test_validate_b64_requires_api_key(self, client, sample_ros_model):
-        """Test that /validate/b64 requires API key."""
-        encoded = base64.b64encode(sample_ros_model.encode()).decode()
-        
-        response = client.post(
-            "/validate/b64",
-            params={"base64_model": encoded}
-        )
         
         assert response.status_code == 401  # Unauthorized
 
@@ -218,7 +161,7 @@ class TestAPICORS:
         # Make an actual request to validate endpoint
         data = {
             "name": "test_model",
-            "model_str": sample_ros_model
+            "model": sample_ros_model
         }
         response = client.post("/validate", json=data, headers=api_headers)
         

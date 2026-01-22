@@ -1,4 +1,3 @@
-import textx
 from textx import GeneratorDesc
 
 from robocon.m2t.rosgen import GeneratorROS

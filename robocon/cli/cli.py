@@ -1,5 +1,4 @@
 import click
-import os
 from rich import print, pretty
 
 from robocon.generator import GeneratorROS2, GeneratorROS

@@ -1,36 +1,103 @@
-import uuid
-import os
+"""
+RoboCon API for model validation.
+
+This module provides FastAPI endpoints for validating RoboCon models
+through various input methods (text, file upload, base64).
+"""
+
 import base64
-import shutil
+import logging
+import os
 import tarfile
-from pydantic import BaseModel
+import uuid
+from pathlib import Path
+from typing import Optional
 
-from fastapi import FastAPI, File, UploadFile, status, HTTPException, Security, Body
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, File, HTTPException, Security, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import APIKeyHeader
+from pydantic import BaseModel, Field
 
-from robocon.utils import build_model
 from robocon.definitions import TMP_DIR
+from robocon.utils import build_model, check_model_errors
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# API Configuration
 API_KEY = os.getenv("API_KEY", "123123")
-
 api_keys = [API_KEY]
 
-api = FastAPI()
+# FastAPI app initialization
+api = FastAPI(
+    title="RoboCon Validation API",
+    description="API for validating RoboCon models",
+    version="1.0.0",
+)
 
 api_key_header = APIKeyHeader(name="X-API-Key")
 
 
+# Pydantic Models
+class ValidationRequest(BaseModel):
+    """Request model for text-based validation."""
+
+    name: str = Field(..., description="Name of the model")
+    model: str = Field(..., description="Model content as string")
+
+
+class ValidationError(BaseModel):
+    """Individual validation error."""
+
+    type: str = Field(..., description="Error type: syntax, semantic, or unknown")
+    message: str = Field(..., description="Error message")
+    line: int | None = Field(None, description="Line number where error occurred")
+    column: int | None = Field(None, description="Column number where error occurred")
+
+
+class ValidationResponse(BaseModel):
+    """Response model for validation endpoints."""
+
+    valid: bool = Field(..., description="Whether the model is valid")
+    errors: list[ValidationError] = Field(default_factory=list, description="List of validation errors")
+    
+    # Deprecated fields for backward compatibility
+    error: str | None = Field(None, description="Deprecated: error message (use errors list)")
+    line: int | None = Field(None, description="Deprecated: error line (use errors list)")
+    column: int | None = Field(None, description="Deprecated: error column (use errors list)")
+
+
+# Security
 def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
+    """
+    Validate API key from request header.
+
+    Args:
+        api_key_header: API key from X-API-Key header
+
+    Returns:
+        The validated API key
+
+    Raises:
+        HTTPException: If API key is invalid or missing
+    """
     if api_key_header in api_keys:
+        logger.debug("API key validated successfully")
         return api_key_header
+
+    logger.warning("Invalid API key attempt")
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid or missing API Key",
     )
 
 
+# Middleware
 api.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -40,95 +107,193 @@ api.add_middleware(
 )
 
 
-if not os.path.exists(TMP_DIR):
-    os.mkdir(TMP_DIR)
+# Ensure temp directory exists
+TMP_DIR_PATH = Path(TMP_DIR)
+TMP_DIR_PATH.mkdir(parents=True, exist_ok=True)
+logger.info(f"Temporary directory initialized: {TMP_DIR}")
 
 
-class Model(BaseModel):
-    name: str
-    model_str: str
+# Helper Functions
+def _validate_model_file(file_path: str) -> ValidationResponse:
+    """
+    Validate a model file using the check_model_errors function.
+
+    Args:
+        file_path: Path to the model file to validate
+
+    Returns:
+        ValidationResponse with valid flag and list of errors
+    """
+    errors = check_model_errors(file_path)
+    
+    if errors:
+        logger.warning(f"Model validation found {len(errors)} error(s): {file_path}")
+        
+        # Convert error dicts to ValidationError models
+        validation_errors = [
+            ValidationError(
+                type=err.get("type", "unknown"),
+                message=err.get("message", ""),
+                line=err.get("line"),
+                column=err.get("column")
+            )
+            for err in errors
+        ]
+        
+        # Populate backward compatibility fields from first error
+        first_error = errors[0]
+        return ValidationResponse(
+            valid=False,
+            errors=validation_errors,
+            error=first_error.get("message"),
+            line=first_error.get("line"),
+            column=first_error.get("column")
+        )
+    else:
+        logger.info(f"Model validation successful: {file_path}")
+        return ValidationResponse(
+            valid=True,
+            errors=[],
+            error=None,
+            line=None,
+            column=None
+        )
 
 
-@api.post("/validate")
-async def validate(model: Model, api_key: str = Security(get_api_key)):
-    text = model.model_str
-    name = model.name
-    if len(text) == 0:
-        return 404
-    resp = {"status": 200, "message": ""}
-    u_id = uuid.uuid4().hex[0:8]
-    fpath = os.path.join(TMP_DIR, f"model_for_validation-{u_id}.auto")
-    with open(fpath, "w") as f:
-        f.write(text)
+def _cleanup_temp_file(file_path: str) -> None:
+    """
+    Clean up temporary file if it exists.
+
+    Args:
+        file_path: Path to the temporary file
+    """
     try:
-        model = build_model(fpath)
-        print("Model validation success!!")
-        resp["message"] = "Model validation success"
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.debug(f"Cleaned up temporary file: {file_path}")
     except Exception as e:
-        print("Exception while validating model. Validation failed!!")
-        print(e)
-        resp["status"] = 404
-        resp["message"] = str(e)
-        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
-    return resp
+        logger.warning(f"Failed to cleanup temporary file {file_path}: {e}")
 
 
-@api.post("/validate/file")
+def _generate_temp_filepath(extension: str = ".auto") -> str:
+    """
+    Generate a unique temporary file path.
+
+    Args:
+        extension: File extension for the temporary file
+
+    Returns:
+        Full path to the temporary file
+    """
+    u_id = uuid.uuid4().hex[:8]
+    return os.path.join(TMP_DIR, f"model_for_validation-{u_id}{extension}")
+
+
+# API Endpoints
+@api.post("/validate", response_model=ValidationResponse)
+async def validate(
+    model: ValidationRequest,
+    api_key: str = Security(get_api_key),
+) -> ValidationResponse:
+    """
+    Validate a model from text content.
+
+    Args:
+        model: Model request containing name and model content
+        api_key: API key for authentication
+
+    Returns:
+        ValidationResponse with status and message
+
+    Raises:
+        HTTPException: If model is empty or validation fails
+    """
+    logger.info(f"Validation request received for model: {model.name}")
+
+    if not model.model or len(model.model.strip()) == 0:
+        logger.warning(f"Empty model content for: {model.name}")
+        raise HTTPException(
+            status_code=400,
+            detail="Model content cannot be empty",
+        )
+
+    fpath = _generate_temp_filepath()
+
+    try:
+        with open(fpath, "w", encoding="utf-8") as f:
+            f.write(model.model)
+
+        return _validate_model_file(fpath)
+    finally:
+        _cleanup_temp_file(fpath)
+
+
+@api.post("/validate/file", response_model=ValidationResponse)
 async def validate_file(
-    file: UploadFile = File(...), api_key: str = Security(get_api_key)
-):
-    print(
-        f"Validation for request: file=<{file.filename}>,"
-        + f" descriptor=<{file.file}>"
-    )
-    resp = {"status": 200, "message": ""}
-    fd = file.file
-    u_id = uuid.uuid4().hex[0:8]
-    fpath = os.path.join(TMP_DIR, f"model_for_validation-{u_id}.auto")
-    with open(fpath, "w") as f:
-        f.write(fd.read().decode("utf8"))
+    file: UploadFile = File(...),
+    api_key: str = Security(get_api_key),
+) -> ValidationResponse:
+    """
+    Validate a model from an uploaded file.
+
+    Args:
+        file: Uploaded file containing the model
+        api_key: API key for authentication
+
+    Returns:
+        ValidationResponse with status and message
+
+    Raises:
+        HTTPException: If validation fails
+    """
+    logger.info(f"File validation request: filename={file.filename}")
+
+    fpath = _generate_temp_filepath()
+
     try:
-        model = build_model(fpath)
-        print("Model validation success!!")
-        resp["message"] = "Model validation success"
-    except Exception as e:
-        print("Exception while validating model. Validation failed!!")
-        print(e)
-        resp["status"] = 404
-        resp["message"] = str(e)
-        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
-    return resp
+        content = await file.read()
+        with open(fpath, "w", encoding="utf-8") as f:
+            f.write(content.decode("utf-8"))
+
+        return _validate_model_file(fpath)
+    finally:
+        _cleanup_temp_file(fpath)
 
 
-@api.post("/validate/b64")
-async def validate_b64(base64_model: str, api_key: str = Security(get_api_key)):
-    if len(base64_model) == 0:
-        return 404
-    resp = {"status": 200, "message": ""}
-    fdec = base64.b64decode(base64_model)
-    u_id = uuid.uuid4().hex[0:8]
-    fpath = os.path.join(TMP_DIR, "model_for_validation-{}.auto".format(u_id))
-    with open(fpath, "wb") as f:
-        f.write(fdec)
+# Utility Functions
+def make_tarball(fout: str, source_dir: str) -> None:
+    """
+    Create a gzipped tar archive from a source directory.
+
+    Args:
+        fout: Output file path for the tarball
+        source_dir: Source directory to archive
+    """
+    logger.info(f"Creating tarball: {fout} from {source_dir}")
     try:
-        model = build_model(fpath)
-        print("Model validation success!!")
-        resp["message"] = "Model validation success"
+        with tarfile.open(fout, "w:gz") as tar:
+            tar.add(source_dir, arcname=os.path.basename(source_dir))
+        logger.info(f"Tarball created successfully: {fout}")
     except Exception as e:
-        print("Exception while validating model. Validation failed!!")
-        print(e)
-        resp["status"] = 404
-        resp["message"] = str(e)
-        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
-    return resp
+        logger.error(f"Failed to create tarball {fout}: {e}")
+        raise
 
 
-def make_tarball(fout, source_dir):
-    with tarfile.open(fout, "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
+def make_executable(path: str) -> None:
+    """
+    Make a file executable by setting appropriate permissions.
 
+    This copies read (R) bits to execute (X) bits and applies them.
 
-def make_executable(path):
-    mode = os.stat(path).st_mode
-    mode |= (mode & 0o444) >> 2  # copy R bits to X
-    os.chmod(path, mode)
+    Args:
+        path: Path to the file to make executable
+    """
+    logger.info(f"Making file executable: {path}")
+    try:
+        mode = os.stat(path).st_mode
+        mode |= (mode & 0o444) >> 2  # copy R bits to X
+        os.chmod(path, mode)
+        logger.debug(f"File permissions updated: {path}")
+    except Exception as e:
+        logger.error(f"Failed to make file executable {path}: {e}")
+        raise
