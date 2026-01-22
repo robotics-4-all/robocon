@@ -8,12 +8,13 @@ through various input methods (text, file upload, base64).
 import base64
 import logging
 import os
+import shutil
 import tarfile
 import uuid
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, HTTPException, Security, UploadFile, status
+from fastapi import FastAPI, File, HTTPException, Security, UploadFile, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import APIKeyHeader
@@ -21,6 +22,8 @@ from pydantic import BaseModel, Field
 
 from robocon.definitions import TMP_DIR
 from robocon.utils import build_model, check_model_errors
+from robocon.m2t.rosgen import GeneratorROS
+from robocon.m2t.ros2gen import GeneratorROS2
 
 # Configure logging
 logging.basicConfig(
@@ -48,6 +51,13 @@ class ValidationRequest(BaseModel):
     """Request model for text-based validation."""
 
     name: str = Field(..., description="Name of the model")
+    model: str = Field(..., description="Model content as string")
+
+
+class CodeGenerationRequest(BaseModel):
+    """Request model for code generation."""
+
+    name: str = Field(..., description="Name of the project/model")
     model: str = Field(..., description="Model content as string")
 
 
@@ -189,6 +199,79 @@ def _generate_temp_filepath(extension: str = ".auto") -> str:
     return os.path.join(TMP_DIR, f"model_for_validation-{u_id}{extension}")
 
 
+def _generate_code_from_model(model_name: str, model_content: str) -> str:
+    """
+    Generate code from a model string and return the path to the generated tarball.
+
+    Args:
+        model_name: Name of the model/project
+        model_content: RoboCon model content as string
+
+    Returns:
+        Path to the generated tarball (.tar.gz)
+
+    Raises:
+        HTTPException: If validation fails or generation fails
+    """
+    u_id = uuid.uuid4().hex[:8]
+    temp_work_dir = Path(TMP_DIR) / f"codegen-{u_id}"
+    temp_work_dir.mkdir(parents=True, exist_ok=True)
+    
+    model_file_path = temp_work_dir / "model.rbr"
+    gen_output_dir = temp_work_dir / "gen"
+    gen_output_dir.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        # Write model to temp file
+        with open(model_file_path, "w", encoding="utf-8") as f:
+            f.write(model_content)
+            
+        # Build model to check type and validate
+        try:
+            model_obj, _ = build_model(str(model_file_path))
+        except Exception as e:
+            logger.error(f"Model build failed for code generation: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model validation failed: {e}"
+            )
+            
+        # Detect generator type
+        robot_type = getattr(model_obj.robot, 'type', None)
+        if robot_type == 'ROS':
+            logger.info(f"Using ROS generator for {model_name}")
+            GeneratorROS.generate(model_obj, str(gen_output_dir))
+        elif robot_type == 'ROS2':
+            logger.info(f"Using ROS2 generator for {model_name}")
+            GeneratorROS2.generate(model_obj, str(gen_output_dir))
+        else:
+            logger.error(f"Unsupported or missing robot type: {robot_type}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported or missing robot type: {robot_type}. Must be ROS or ROS2."
+            )
+            
+        # Create tarball
+        tarball_path = Path(TMP_DIR) / f"{model_name}_generated_code-{u_id}.tar.gz"
+        make_tarball(str(tarball_path), str(gen_output_dir))
+        
+        return str(tarball_path)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Code generation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Code generation failed: {e}"
+        )
+    finally:
+        # Cleanup work directory (but keep tarball for response)
+        if temp_work_dir.exists():
+            shutil.rmtree(temp_work_dir)
+            logger.debug(f"Cleaned up temporary work directory: {temp_work_dir}")
+
+
 # API Endpoints
 @api.post("/validate", response_model=ValidationResponse)
 async def validate(
@@ -260,6 +343,86 @@ async def validate_file(
         _cleanup_temp_file(fpath)
 
 
+@api.post("/transformation/code")
+async def generate_code(
+    request: CodeGenerationRequest,
+    background_tasks: BackgroundTasks,
+    api_key: str = Security(get_api_key),
+):
+    """
+    Generate code from a model and return a tarball.
+
+    Args:
+        request: Code generation request containing name and model content
+        background_tasks: FastAPI background tasks for cleanup
+        api_key: API key for authentication
+
+    Returns:
+        FileResponse with the generated code tarball
+    """
+    logger.info(f"Code generation request received for model: {request.name}")
+    
+    if not request.model or len(request.model.strip()) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Model content cannot be empty"
+        )
+        
+    tarball_path = _generate_code_from_model(request.name, request.model)
+    
+    # Add cleanup task to delete the tarball after the response is sent
+    background_tasks.add_task(_cleanup_temp_file, tarball_path)
+    
+    return FileResponse(
+        path=tarball_path,
+        filename=f"{request.name}_generated_code.tar.gz",
+        media_type="application/gzip"
+    )
+
+
+@api.post("/transformation/code/file")
+async def generate_code_file(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    api_key: str = Security(get_api_key),
+):
+    """
+    Generate code from an uploaded model file and return a tarball.
+
+    Args:
+        background_tasks: FastAPI background tasks for cleanup
+        file: Uploaded file containing the model
+        api_key: API key for authentication
+
+    Returns:
+        FileResponse with the generated code tarball
+    """
+    logger.info(f"File code generation request: filename={file.filename}")
+
+    # Use filename (without extension) as project name
+    project_name = Path(file.filename).stem
+    
+    content = await file.read()
+    model_content = content.decode("utf-8")
+    
+    if not model_content or len(model_content.strip()) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Model content cannot be empty"
+        )
+        
+    tarball_path = _generate_code_from_model(project_name, model_content)
+    
+    # Add cleanup task to delete the tarball after the response is sent
+    background_tasks.add_task(_cleanup_temp_file, tarball_path)
+    
+    return FileResponse(
+        path=tarball_path,
+        filename=f"{project_name}_generated_code.tar.gz",
+        media_type="application/gzip"
+    )
+
+
 # Utility Functions
 def make_tarball(fout: str, source_dir: str) -> None:
     """
@@ -272,7 +435,10 @@ def make_tarball(fout: str, source_dir: str) -> None:
     logger.info(f"Creating tarball: {fout} from {source_dir}")
     try:
         with tarfile.open(fout, "w:gz") as tar:
-            tar.add(source_dir, arcname=os.path.basename(source_dir))
+            # Add all files in source_dir to the root of the tarball
+            for item in os.listdir(source_dir):
+                item_path = os.path.join(source_dir, item)
+                tar.add(item_path, arcname=item)
         logger.info(f"Tarball created successfully: {fout}")
     except Exception as e:
         logger.error(f"Failed to create tarball {fout}: {e}")
