@@ -1,0 +1,44 @@
+Robot[ROS] ROSTurtleSim @ "localhost" {
+    TOPICS
+        pose [ "turtlesim/Pose", "/turtle1/pose" ]
+        cmd_vel [ "geometry_msgs/Twist", "/turtle1/cmd_vel" ]
+        color_sensor [ "turtlesim/Color", "/turtle1/color_sensor" ]
+
+    SERVICES
+        reset [ "std_srvs/Empty", "/reset" ]
+        spawn [ "turtlesim/Spawn", "/spawn" ]
+        kill [ "turtlesim/Kill", "/kill" ]
+        set_pen [ "turtlesim/SetPen", "/turtle1/set_pen" ]
+        teleport_absolute [ "turtlesim/TeleportAbsolute", "/turtle1/teleport_absolute" ]
+        teleport_relative [ "turtlesim/TeleportRelative", "/turtle1/teleport_relative" ]
+
+    NODES
+        turtlesim_node {
+            uri: "/turtlesim"
+            publishes: [ pose, color_sensor ]
+            subscribes: [ cmd_vel ]
+            services: [ reset, spawn, kill, set_pen, teleport_absolute, teleport_relative ]
+        }
+}
+
+Broker[MQTT] LocalBroker {
+    host: "localhost",
+    port: 1883
+}
+
+# Bridge all endpoints of turtlesim_node with custom topic mappings
+# This demonstrates the new NodeBridge features:
+# - Optional prefix (still using "turtle1" here)
+# - Custom topic mappings for specific topics
+# - Custom service mappings for control services
+Bridge[Node] turtle_bridges turtlesim_node:"turtle1" {
+    topic_maps: {
+        pose: "turtlesim/robot/position",
+        cmd_vel: "turtlesim/robot/commands/velocity"
+    }
+    service_maps: {
+        spawn: "turtlesim/services/spawn_turtle",
+        kill: "turtlesim/services/remove_turtle"
+    }
+};
+

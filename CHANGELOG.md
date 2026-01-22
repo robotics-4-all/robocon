@@ -1,4 +1,4 @@
-# rosbridge-dsl changelog
+# RoboConnect changelog
 
 All _notable_ changes to this project will be documented in this file.
 
@@ -19,9 +19,10 @@ please take a look at related PRs and issues and see if the change affects you.
 ### Fixed
 
 ### Changed
+- Renamed project to RoboConnect.
 
 
-[Unreleased]: https://github.com/CHANGEME/rosbridge-dsl/commits/master
+[Unreleased]: https://github.com/robotics-4-all/RoboConnect/commits/master
 
 
 [keepachangelog]: https://keepachangelog.com/

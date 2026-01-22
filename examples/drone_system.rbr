@@ -1,0 +1,28 @@
+Robot[ROS2] DroneRobot @ "px4-companion" {
+    TOPICS
+        local_pose [ "geometry_msgs/PoseStamped", "/mavros/local_position/pose" ]
+        global_pose [ "sensor_msgs/NavSatFix", "/mavros/global_position/global" ]
+        battery [ "sensor_msgs/BatteryState", "/mavros/battery" ]
+        state [ "mavros_msgs/State", "/mavros/state" ]
+        imu [ "sensor_msgs/Imu", "/mavros/imu/data" ]
+
+    SERVICES
+        arm [ "mavros_msgs/CommandBool", "/mavros/cmd/arming" ]
+        set_mode [ "mavros_msgs/SetMode", "/mavros/set_mode" ]
+        takeoff [ "mavros_msgs/CommandTOL", "/mavros/cmd/takeoff" ]
+        land [ "mavros_msgs/CommandTOL", "/mavros/cmd/land" ]
+
+    NODES
+        mavros_node {
+            publishes: [ local_pose, global_pose, battery, state, imu ]
+            services: [ arm, set_mode, takeoff, land ]
+        }
+}
+
+Broker[Redis] DroneBroker {
+    host: "ground-station.local",
+    port: 6379
+}
+
+# Bridge all MAVROS endpoints for GCS integration
+Bridge[Node] drone_bridges mavros_node:"drone1";

@@ -1,7 +1,3 @@
-fastapi>=0.100.0
-python-multipart
-aiofiles
 rich==13.4.2
 jinja2
-uvicorn
-textX
+textX>=4.2.0

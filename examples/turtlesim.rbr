@@ -1,0 +1,47 @@
+Robot[ROS2] TurtleSimRobot @ "localhost" {
+    TOPICS
+        pose [ "turtlesim/Pose", "/turtle1/pose" ]
+        cmd_vel [ "geometry_msgs/Twist", "/turtle1/cmd_vel" ]
+        color_sensor [ "turtlesim/Color", "/turtle1/color_sensor" ]
+
+    SERVICES
+        reset [ "std_srvs/Empty", "/reset" ]
+        spawn [ "turtlesim/Spawn", "/spawn" ]
+        kill [ "turtlesim/Kill", "/kill" ]
+        set_pen [ "turtlesim/SetPen", "/turtle1/set_pen" ]
+        teleport_absolute [ "turtlesim/TeleportAbsolute", "/turtle1/teleport_absolute" ]
+        teleport_relative [ "turtlesim/TeleportRelative", "/turtle1/teleport_relative" ]
+
+    NODES
+        turtlesim_node {
+            uri: "/turtlesim"
+            publishes: [ pose, color_sensor ]
+            subscribes: [ cmd_vel ]
+            services: [ reset, spawn, kill, set_pen, teleport_absolute, teleport_relative ]
+        }
+
+        teleop_key {
+            uri: "/teleop_turtle"
+            publishes: [ cmd_vel ]
+        }
+}
+
+Broker[MQTT] LocalBroker {
+    host: "localhost",
+    port: 1883
+}
+
+# Bridge turtlesim_node with custom topic mappings
+# Demonstrates: partial topic mapping with remaining topics using prefix
+Bridge[Node] turtle_bridges turtlesim_node:"turtle1" {
+    topic_maps: {
+        pose: "robot/turtle/state/position"
+    }
+    service_maps: {
+        reset: "robot/turtle/actions/reset"
+    }
+};
+
+# Bridge teleop_key without prefix - uses topic name directly
+Bridge[Node] teleop_bridge teleop_key;
+

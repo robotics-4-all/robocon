@@ -1,0 +1,37 @@
+Robot[ROS2] ManipulationRobot @ "manipulator-pc" {
+    TOPICS
+        joint_states [ "sensor_msgs/JointState", "/joint_states" ]
+        display_planned_path [ "moveit_msgs/DisplayTrajectory", "/display_planned_path" ]
+        robot_description [ "std_msgs/String", "/robot_description" ]
+
+    SERVICES
+        get_planning_scene [ "moveit_msgs/GetPlanningScene", "/get_planning_scene" ]
+        compute_ik [ "moveit_msgs/GetPositionIK", "/compute_ik" ]
+
+    ACTIONS
+        move_group [ "moveit_msgs/MoveGroup", "/move_group" ]
+        execute_trajectory [ "moveit_msgs/ExecuteTrajectory", "/execute_trajectory" ]
+
+    NODES
+        move_group_node {
+            publishes: [ display_planned_path ]
+            subscribes: [ joint_states, robot_description ]
+            services: [ get_planning_scene, compute_ik ]
+            actions: [ move_group, execute_trajectory ]
+        }
+
+        robot_state_publisher {
+            subscribes: [ joint_states ]
+        }
+}
+
+Broker[MQTT] ManipulatorBroker {
+    host: "192.168.1.50",
+    port: 1883
+}
+
+# Bridge MoveGroup action for remote control
+Bridge[Node] move_group_bridges move_group_node:"arm/move_group";
+
+# Bridge joint states for remote monitoring
+Bridge[Topic] joint_state_bridge joint_states:"arm/joint_states";

@@ -1,0 +1,36 @@
+Robot[ROS2] PerceptionRobot @ "jetson-nano" {
+    TOPICS
+        image_raw [ "sensor_msgs/Image", "/camera/image_raw" ]
+        camera_info [ "sensor_msgs/CameraInfo", "/camera/camera_info" ]
+        point_cloud [ "sensor_msgs/PointCloud2", "/lidar/points" ]
+        detections [ "vision_msgs/Detection2DArray", "/vision/detections" ]
+
+    SERVICES
+        set_camera_info [ "sensor_msgs/SetCameraInfo", "/camera/set_camera_info" ]
+
+    NODES
+        usb_cam_node {
+            uri: "/camera"
+            publishes: [ image_raw, camera_info ]
+            services: [ set_camera_info ]
+        }
+
+        rplidar_node {
+            uri: "/lidar"
+            publishes: [ point_cloud ]
+        }
+
+        object_detector {
+            publishes: [ detections ]
+            subscribes: [ image_raw ]
+        }
+}
+
+Broker[AMQP] PerceptionBroker {
+    host: "rabbitmq.local",
+    port: 5672,
+    vhost: "/robotics"
+}
+
+# Bridge all endpoints of object_detector node
+Bridge[Node] vision_bridges object_detector:"vision";

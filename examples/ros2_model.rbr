@@ -1,56 +1,31 @@
-ROSSystem MyROS2Robot
-    type: ROS2
-    host: "localhost"
+Robot[ROS2] MyROS2Robot @ "localhost" {
+    TOPICS
+        odom [ "nav_msgs/Odometry", "/odom" ]
+        cmd_vel [ "geometry_msgs/Twist", "/cmd_vel" ]
+        motor_power [ "geometry_msgs/Twist", "/motor_power" ]
+        sonar_fl [ "sensor_msgs/Range", "/sonar/front_left" ]
+        sonar_fr [ "sensor_msgs/Range", "/sonar/front_right" ]
+        sonar_rear [ "sensor_msgs/Range", "/sonar/rear" ]
+    SERVICES
+        reset [ "std_srvs/Empty", "/reset" ]
+    NODES
+        base_controller {
+            publishes: [ odom, sonar_fl, sonar_fr, sonar_rear ]
+            subscribes: [ cmd_vel, motor_power ]
+            services: [ reset ]
+        }
+}
 
-end
+Broker[MQTT] HomeMQTT {
+    host: 'localhost',
+    port: 1883,
+    ssl: False,
+    auth.username: "",
+    auth.password: ""
+}
 
-Broker<MQTT> HomeMQTT
-    host: 'localhost'
-    port: 1883
-    ssl: false
-    auth:
-        username: ""
-        password: ""
-end
+# Bridge all endpoints of base_controller node
+Bridge[Node] base_bridges base_controller:"robot";
 
-TopicBridge odom_pub_bridge
-    msgType: "/nav_msgs/Odometry"
-    rosURI: "/odom"
-    brokerURI: "odom"
-    direction: R2B
-end
-
-TopicBridge cmd_vel_sub_bridge
-    msgType: "/geometry_msgs/Twist"
-    rosURI: "/cmd_vel"
-    brokerURI: "cmd_vel"
-    direction: B2R
-end
-
-TopicBridge motor_power_sub_bridge
-    msgType: "/geometry_msgs/Twist"
-    rosURI: "/motor_power"
-    brokerURI: "motor_power"
-    direction: B2R
-end
-
-TopicBridge front_left_sonar_pub_bridge
-    msgType: "/sensor_msgs/Range"
-    rosURI: "/sonar/front_left"
-    brokerURI: "sonar.front_left"
-    direction: R2B
-end
-
-TopicBridge front_right_sonar_pub_bridge
-    msgType: "/sensor_msgs/Range"
-    rosURI: "/sonar/front_right"
-    brokerURI: "sonar.front_right"
-    direction: R2B
-end
-
-TopicBridge rear_sonar_pub_bridge
-    msgType: "/sensor_msgs/Range"
-    rosURI: "/sonar/rear"
-    brokerURI: "sonar.rear"
-    direction: R2B
-end
+# TF Bridge (Assuming 'odom' topic is used for TF in this context)
+Bridge[TF] tf_bridge odom:"tf";

@@ -1,0 +1,45 @@
+Robot[ROS] ROSNavStack @ "robot-pc" {
+    TOPICS
+        scan [ "sensor_msgs/LaserScan", "/scan" ]
+        odom [ "nav_msgs/Odometry", "/odom" ]
+        map [ "nav_msgs/OccupancyGrid", "/map" ]
+        tf [ "tf2_msgs/TFMessage", "/tf" ]
+        cmd_vel [ "geometry_msgs/Twist", "/cmd_vel" ]
+        initialpose [ "geometry_msgs/PoseWithCovarianceStamped", "/initialpose" ]
+
+    SERVICES
+        static_map [ "nav_msgs/GetMap", "/static_map" ]
+        make_plan [ "nav_msgs/GetPlan", "/move_base/make_plan" ]
+
+    ACTIONS
+        move_base [ "move_base_msgs/MoveBaseAction", "/move_base" ]
+
+    NODES
+        move_base {
+            publishes: [ cmd_vel ]
+            subscribes: [ odom, scan, tf ]
+            actions: [ move_base ]
+            services: [ make_plan ]
+        }
+
+        amcl {
+            publishes: [ tf ]
+            subscribes: [ scan, odom, tf, initialpose ]
+        }
+
+        map_server {
+            publishes: [ map ]
+            services: [ static_map ]
+        }
+}
+
+Broker[Redis] NavBroker {
+    host: "10.0.0.5",
+    port: 6379
+}
+
+# Bridge move_base for remote navigation commands
+Bridge[Node] nav_bridges move_base:"robot/nav";
+
+# Bridge AMCL for localization monitoring
+Bridge[Node] amcl_bridges amcl:"robot/amcl";

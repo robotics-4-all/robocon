@@ -1,0 +1,77 @@
+from typing import Any
+import rospy
+
+from commlib.endpoints import endpoint_factory, EndpointType, TransportType
+from ros_msg_transform import ros_msg_to_dict, dict_to_ros_msg
+
+
+class B2RTopicBridge:
+
+    def __init__(self, ros_topic: str, msg_type: Any, broker_type: Any, broker_uri, broker_conn_params):
+        self.ros_topic = ros_topic
+        self.broker_uri = broker_uri
+        self.msg_type = msg_type
+        self.broker_type = broker_type
+        self.broker_conn_params = broker_conn_params
+        self.queue_size = 10
+
+        self._init_ros_endpoint()
+        self._init_broker_endpoint()
+        print(f'Started B2R Topic Bridge: {broker_type.name.lower()}://{broker_uri} -> ros://{self.ros_topic}')
+
+    def _init_ros_endpoint(self):
+        self.ros_pub = rospy.Publisher(
+            self.ros_topic,
+            self.msg_type,
+            queue_size=self.queue_size
+        )
+
+    def _init_broker_endpoint(self):
+        self.bsub = endpoint_factory(EndpointType.Subscriber,
+            self.broker_type)(
+            topic=self.broker_uri,
+            on_message=self.on_msg,
+            conn_params=self.broker_conn_params
+        )
+        self.bsub.run()
+
+    def on_msg(self, data):
+        _msg = dict_to_ros_msg(data, self.msg_type)
+        rospy.loginfo(f'Publishing: {_msg}')
+        self.ros_pub.publish(_msg)
+
+
+class R2BTopicBridge:
+
+    def __init__(self, ros_topic: str, msg_type: Any,
+                 broker_type: Any, broker_uri,
+                 broker_conn_params):
+        self.ros_topic = ros_topic
+        self.broker_uri = broker_uri
+        self.msg_type = msg_type
+        self.broker_type = broker_type
+        self.broker_conn_params = broker_conn_params
+
+        self._init_broker_endpoint()
+        self._init_ros_endpoint()
+        print(f'Started R2B Topic Bridge: ros://{self.ros_topic} -> {broker_type.name.lower()}://{broker_uri}')
+
+    def _init_ros_endpoint(self):
+        self.ros_sub = rospy.Subscriber(
+            self.ros_topic,
+            self.msg_type,
+            self.on_msg
+        )
+
+    def _init_broker_endpoint(self):
+        self.bpub = endpoint_factory(EndpointType.Publisher,
+            self.broker_type)(
+            topic=self.broker_uri,
+            conn_params=self.broker_conn_params
+        )
+        self.bpub.run()
+
+    def on_msg(self, msg):
+        _data = ros_msg_to_dict(msg)
+        rospy.loginfo(f'Publishing: {_data}')
+        self.bpub.publish(_data)

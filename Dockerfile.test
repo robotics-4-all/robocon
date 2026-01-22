@@ -1,0 +1,57 @@
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Set the working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only requirements first to leverage Docker layer caching
+COPY requirements.txt .
+COPY pyproject.toml .
+
+# Install Python dependencies including test dependencies
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+
+# Install the package with test dependencies
+RUN pip install -e ".[test]"
+
+# Test stage
+FROM python:3.11-slim as test
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy everything
+COPY requirements.txt .
+COPY pyproject.toml .
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install fastapi uvicorn python-multipart aiofiles httpx click
+
+COPY . .
+RUN pip install -e ".[test]"
+
+# Run tests
+CMD ["pytest", "tests/", "-v", "--cov=robocon", "--cov-report=term-missing", "--cov-fail-under=80"]

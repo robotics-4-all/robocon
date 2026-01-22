@@ -1,0 +1,18 @@
+import utils
+
+MessageBroker:
+    'Broker' '[' type=BrokerType ']' name=ID
+    ('{' properties+=Property[','] '}')?
+;
+
+BrokerType: 'MQTT' | 'AMQP' | 'Redis';
+
+Property:
+    name=PropertyID ':' value=Value
+;
+
+PropertyID: ID ('.' ID)*;
+
+Value: STRING | INT | BOOL | FLOAT;
+
+BOOL: 'True' | 'False';

@@ -1,0 +1,112 @@
+import utils
+import broker
+
+Model:
+(
+    (imports*=Import)
+    (robot=Robot)
+    (broker=MessageBroker)
+    (bridges*=Bridge)
+)#
+;
+
+Robot:
+    'Robot' '[' type=ROSType ']' name=ID '@' host=STRING
+    '{'
+    (
+        ('TOPICS' topics*=ROSTopic)?
+        ('SERVICES' services*=ROSService)?
+        ('ACTIONS' actions*=ROSAction)?
+        ('NODES' nodes*=ROSNode)?
+    )#
+    '}'
+;
+
+ROSType: "ROS2" | "ROS";
+
+ROSTopic:
+    name=ID '[' msg=STRING ',' uri=STRING ']'
+;
+
+ROSService:
+    name=ID '[' msg=STRING ',' uri=STRING ']'
+;
+
+ROSAction:
+    name=ID '[' msg=STRING ',' uri=STRING ']'
+;
+
+ROSNode:
+    name=ID '{'
+    (
+        ('uri' ':' uri=STRING)?
+        ('publishes' ':' '[' publishes*=[ROSTopic][','] ']')?
+        ('subscribes' ':' '[' subscribes*=[ROSTopic][','] ']')?
+        ('services' ':' '[' services*=[ROSService][','] ']')?
+        ('actions' ':' '[' actions*=[ROSAction][','] ']')?
+    )#
+    '}'
+;
+
+Bridge: TopicBridge | ServiceBridge | ActionBridge | TFBridge | NodeBridge;
+
+TopicBridge:
+    'Bridge' '[' 'Topic' ']' name=ID lhs=TopicEndpoint ':' rhs=TopicEndpoint ';'
+;
+
+TopicEndpoint: ros=[ROSTopic] | broker=STRING;
+
+ServiceBridge:
+    'Bridge' '[' 'Service' ']' name=ID lhs=ServiceEndpoint ':' rhs=ServiceEndpoint ';'
+;
+
+ServiceEndpoint: ros=[ROSService] | broker=STRING;
+
+ActionBridge:
+    'Bridge' '[' 'Action' ']' name=ID lhs=ActionEndpoint ':' rhs=ActionEndpoint ';'
+;
+
+ActionEndpoint: ros=[ROSAction] | broker=STRING;
+
+TFBridge:
+    'Bridge' '[' 'TF' ']' name=ID lhs=TFEndpoint ':' rhs=TFEndpoint ';'
+;
+
+TFEndpoint: ros=[ROSTopic] | broker=STRING;
+
+NodeBridge:
+    'Bridge' '[' 'Node' ']' name=ID node=[ROSNode] (':' prefix=STRING)?
+    ('{'
+        (topic_maps=TopicMapList)?
+        (service_maps=ServiceMapList)?
+        (action_maps=ActionMapList)?
+    '}')?
+    ';'
+;
+
+TopicMapList:
+    'topic_maps' ':' '{' mappings*=TopicMapping[','] '}'
+;
+
+TopicMapping:
+    topic=[ROSTopic] ':' broker_uri=STRING
+;
+
+ServiceMapList:
+    'service_maps' ':' '{' mappings*=ServiceMapping[','] '}'
+;
+
+ServiceMapping:
+    service=[ROSService] ':' broker_uri=STRING
+;
+
+ActionMapList:
+    'action_maps' ':' '{' mappings*=ActionMapping[','] '}'
+;
+
+ActionMapping:
+    action=[ROSAction] ':' broker_uri=STRING
+;
+// <--------------------------------------------------------------------
+
+BridgeDirection: 'B2R' | 'R2B';
