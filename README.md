@@ -1,6 +1,6 @@
 # Robocon
 
-**Robocon** is a powerful Domain-Specific Language (DSL) designed to simplify the integration of ROS (Robot Operating System) and ROS 2 systems with IoT and Smart Environment infrastructures. It provides a high-level, declarative syntax to define communication bridges between robotics middleware and message brokers like MQTT, Redis, and AMQP.
+**Robocon** is a powerful Domain-Specific Language (DSL) designed to simplify the integration of ROS (Robot Operating System) and ROS 2 systems with IoT and CPS environments and systems. It provides a high-level, declarative syntax to define communication bridges between robotics middleware and message brokers like MQTT, Redis, and AMQP.
 
 ---
 
@@ -14,9 +14,70 @@
 - **Comprehensive Endpoint Support**:
     - **Topics**: Pub/Sub telemetry and commands.
     - **Services**: Request/Response remote procedure calls.
-    - **Actions**: Goal-oriented task management (ROS 2).
+    <!-- - **Actions**: Goal-oriented task management (ROS 2). -->
     - **TF**: Coordinate frame transformations.
 - **Validation & Generation**: Built-in CLI for model validation and automated Python code generation.
+
+### 🆕 Advanced Features (New!)
+
+#### 🔄 Data Transformation & Semantic Mapping
+Transform message data in real-time with Python expressions using **safe, sandboxed evaluation**:
+
+```textx
+Bridge[Topic] temp_bridge temp_sensor : "iot/temperature" {
+    transform: {
+        temp_f: "msg.data * 1.8 + 32",
+        unit: "'fahrenheit'",
+        severity: "'HIGH' if msg.data > 100 else 'NORMAL'"
+    }
+};
+```
+
+**Features:**
+- **Dot notation**: Access nested fields with `msg.data`, `msg.field.subfield`
+- **Python expressions**: Math, conditionals, string operations
+- **Safe functions**: `round()`, `min()`, `max()`, `len()`, string methods
+- **Secure**: AST-based sandboxing blocks dangerous operations
+
+#### 🎯 Conditional Bridging (Filtering)
+Filter messages based on runtime conditions to reduce bandwidth and processing:
+
+```textx
+// Only forward critical errors (whitelist)
+Bridge[Topic] alerts diagnostics : "alerts/critical" {
+    when: "msg.level == 'ERROR' or msg.level == 'FATAL'"
+};
+
+// Filter out test data (blacklist)
+Bridge[Topic] prod_data sensors : "iot/data" {
+    unless: "msg.source == 'test'"
+};
+
+// Combine filtering with transformation
+Bridge[Topic] battery_alerts battery : "alerts/battery" {
+    when: "msg.voltage < 11.0"
+    transform: {
+        percentage: "round((msg.voltage / 12.0) * 100, 1)",
+        severity: "'CRITICAL' if msg.voltage < 10.0 else 'WARNING'"
+    }
+};
+```
+
+**Features:**
+- **`when` clause**: Forward only if condition is true (whitelist)
+- **`unless` clause**: Forward unless condition is true (blacklist)
+- **Mutually exclusive**: Use either `when` or `unless`, not both
+- **Combine with transforms**: Apply transformations only to filtered messages
+
+#### 🔒 Secure Expression Evaluation
+All transformations and conditions use **sandboxed, AST-validated evaluation**:
+- ✅ **Whitelist approach**: Only explicitly safe operations allowed
+- ❌ **Blocks**: File I/O, imports, code execution, system calls
+- 🛡️ **Safe by default**: No code injection vulnerabilities
+- �� **Full test coverage**: 29 comprehensive security tests
+
+See `examples/transformations/` and `examples/conditional_bridging/` for complete examples.
+
 
 ---
 
