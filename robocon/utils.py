@@ -1,5 +1,8 @@
-from os.path import dirname, join
+import os
+import tempfile
+from os.path import join
 from textx import metamodel_from_file
+from textx.exceptions import TextXSyntaxError, TextXSemanticError
 import textx.scoping.providers as scoping_providers
 
 from robocon.definitions import GRAMMAR_DIR
@@ -184,6 +187,90 @@ def build_model(model_fpath):
     reg_models = mm._tx_model_repository.all_models.filename_to_model
     mimports = [val for key, val in reg_models.items() if val != model]
     return (model, mimports)
+
+
+def check_model_errors(model_input: str):
+    """
+    Parse and validate a RoboCon model, returning all detected errors.
+    
+    This function validates both syntactic and semantic rules of the model.
+    
+    Args:
+        model_input: Either a file path (str) to a .rbr file, or model content as string
+        
+    Returns:
+        list: List of error dictionaries with the following schema:
+            {
+                "type": "syntax" or "semantic",
+                "message": str,
+                "line": int,
+                "column": int
+            }
+        Returns empty list if no errors are found.
+    """
+    errors = []
+    temp_file = None
+    
+    try:
+        # Determine if input is a file path or string content
+        if os.path.exists(model_input):
+            # Input is a file path
+            model_path = model_input
+        else:
+            # Input is model string content - create temporary file
+            temp_file = tempfile.NamedTemporaryFile(
+                mode='w',
+                suffix='.rbr',
+                delete=False,
+                encoding='utf-8'
+            )
+            temp_file.write(model_input)
+            temp_file.close()
+            model_path = temp_file.name
+        
+        # Try to build the model to catch all errors
+        mm = get_mm(global_scope=True)
+        model = mm.model_from_file(model_path)
+        
+    except TextXSyntaxError as e:
+        # Syntax error occurred
+        error = {
+            "type": "syntax",
+            "message": e.message if hasattr(e, 'message') else str(e),
+            "line": e.line if hasattr(e, 'line') else 0,
+            "column": e.col if hasattr(e, 'col') else 0
+        }
+        errors.append(error)
+        
+    except TextXSemanticError as e:
+        # Semantic error occurred
+        error = {
+            "type": "semantic",
+            "message": e.message if hasattr(e, 'message') else str(e),
+            "line": e.line if hasattr(e, 'line') else 0,
+            "column": e.col if hasattr(e, 'col') else 0
+        }
+        errors.append(error)
+        
+    except Exception as e:
+        # Catch any other unexpected errors
+        error = {
+            "type": "unknown",
+            "message": str(e),
+            "line": 0,
+            "column": 0
+        }
+        errors.append(error)
+        
+    finally:
+        # Clean up temporary file if created
+        if temp_file and os.path.exists(temp_file.name):
+            try:
+                os.unlink(temp_file.name)
+            except Exception:
+                pass  # Ignore cleanup errors
+    
+    return errors
 
 
 def get_grammar(debug=False):

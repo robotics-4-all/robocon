@@ -161,3 +161,37 @@ def ros2_model_file(temp_dir, sample_ros2_model, write_model_file):
 def node_bridge_model_file(temp_dir, sample_node_bridge_model, write_model_file):
     """Create a temporary NodeBridge model file."""
     return write_model_file(sample_node_bridge_model)
+
+
+@pytest.fixture
+def syntax_error_model():
+    """Return a model with syntax error (missing colon)."""
+    return """
+ros1
+
+ROSTopic test_topic {
+    name "/test"
+    type: "std_msgs/String"
+}
+"""
+
+
+@pytest.fixture
+def semantic_error_model():
+    """Return a model with semantic error (undefined reference)."""
+    return """
+ros1
+
+MessageBroker mqtt {
+    host: "localhost"
+}
+
+Bridge[Topic] test_bridge undefined_topic:"test/topic";
+"""
+
+
+@pytest.fixture
+def empty_model():
+    """Return an empty model string."""
+    return ""
+

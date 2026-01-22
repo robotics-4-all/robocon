@@ -29,7 +29,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "rich==13.4.2",
+    "rich",
     "jinja2",
     "textX",
     "click"
