@@ -1,4 +1,5 @@
 from os import path, mkdir, getcwd, chmod
+import shutil
 
 
 import jinja2
@@ -40,6 +41,8 @@ class GeneratorROS2:
         # Give execution permissions to the generated file
         chmod(out_file, 509)
         GeneratorROS2.gen_requirements(out_dir)
+        # Copy safe_eval.py to output directory
+        GeneratorROS2.copy_safe_eval(out_dir)
 
     @staticmethod
     def gen_requirements(out_dir):
@@ -47,6 +50,13 @@ class GeneratorROS2:
         contents = GeneratorROS2.reqs_tpl.render(deps=GeneratorROS2.PY_DEPS)
         with open(out_file, 'w') as f:
             f.write(contents)
+
+    @staticmethod
+    def copy_safe_eval(out_dir):
+        """Copy safe_eval.py to output directory."""
+        src = path.join(path.dirname(__file__), '..', 'templates', 'safe_eval.py')
+        dst = path.join(out_dir, 'safe_eval.py')
+        shutil.copy(src, dst)
 
     @staticmethod
     def report(model):

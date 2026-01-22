@@ -8,6 +8,7 @@ from ros2_msg_transform import (
     dict_to_ros2_srv_from_ns
 )
 
+from safe_eval import safe_eval
 
 class DotDict(dict):
     """A dictionary that allows dot notation access to its items."""
@@ -102,7 +103,7 @@ class B2RTopicBridge:
         if self.condition is not None:
             context = DotDict(data)
             try:
-                condition_met = eval(self.condition, {"msg": context, "data": context})
+                condition_met = safe_eval(self.condition, {"msg": context, "data": context})
                 should_forward = condition_met if self.condition_type == 'when' else not condition_met
                 if not should_forward:
                     self.nh.get_logger().debug(f"Message filtered out by '{self.condition_type}' condition")
@@ -116,7 +117,7 @@ class B2RTopicBridge:
             transformed_data = {}
             for target, expr in self.transform.items():
                 try:
-                    transformed_data[target] = eval(expr, {"msg": context, "data": context})
+                    transformed_data[target] = safe_eval(expr, {"msg": context, "data": context})
                 except Exception as e:
                     self.nh.get_logger().error(f"Transformation error: {e}")
             data = transformed_data
@@ -162,7 +163,7 @@ class R2BTopicBridge:
         if self.condition is not None:
             context = DotDict(_data)
             try:
-                condition_met = eval(self.condition, {"msg": context, "data": context})
+                condition_met = safe_eval(self.condition, {"msg": context, "data": context})
                 should_forward = condition_met if self.condition_type == 'when' else not condition_met
                 if not should_forward:
                     self.nh.get_logger().debug(f"Message filtered out by '{self.condition_type}' condition")
@@ -176,7 +177,7 @@ class R2BTopicBridge:
             transformed_data = {}
             for target, expr in self.transform.items():
                 try:
-                    transformed_data[target] = eval(expr, {"msg": context, "data": context})
+                    transformed_data[target] = safe_eval(expr, {"msg": context, "data": context})
                 except Exception as e:
                     self.nh.get_logger().error(f"Transformation error: {e}")
             _data = transformed_data
