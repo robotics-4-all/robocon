@@ -24,6 +24,12 @@ docker-build: ## Build Docker Image
 docker-run: ## Run Docker Container
 	docker run -it --rm -p 8080:8080 ${IMAGE_ID}
 
+docker-up:
+	docker compose up --build -d
+
+docker-down:
+	docker compose down
+
 test: docker-test ## Run tests in Docker container (alias for docker-test)
 
 docker-test: ## Build Docker image and run tests inside container
