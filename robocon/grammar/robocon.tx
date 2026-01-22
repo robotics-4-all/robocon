@@ -51,8 +51,17 @@ ROSNode:
 Bridge: TopicBridge | ServiceBridge | ActionBridge | TFBridge | NodeBridge;
 
 TopicBridge:
-    'Bridge' '[' 'Topic' ']' name=ID lhs=TopicEndpoint ':' rhs=TopicEndpoint ';'
+    'Bridge' '[' 'Topic' ']' name=ID lhs=TopicEndpoint ':' rhs=TopicEndpoint
+    ('{'
+        ('transform' ':' '{' transforms*=Transformation[','] '}')?
+    '}')?
+    ';'
 ;
+
+Transformation:
+    target=ID ':' expression=STRING
+;
+
 
 TopicEndpoint: ros=[ROSTopic] | broker=STRING;
 

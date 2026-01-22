@@ -52,12 +52,12 @@ class {{ model.robot.name }}BridgeNode(Node):
         {% if bridge.__class__.__name__=='TopicBridge' and bridge.direction=='B2R' %}
         ## Topic Bridge B2R
         from {{ bridge.topic.msg.split('/')[0] }}.msg import {{ bridge.topic.msg.split('/')[1] }}
-        br = B2RTopicBridge(self, '{{ bridge.topic.uri }}', {{ bridge.topic.msg.split('/')[1] }}, self.broker_type, '{{ bridge.brokerURI }}', self.conn_params)
+        br = B2RTopicBridge(self, '{{ bridge.topic.uri }}', {{ bridge.topic.msg.split('/')[1] }}, self.broker_type, '{{ bridge.brokerURI }}', self.conn_params, {{ bridge.transform_dict }})
         self.br_list.append(br)
         {% elif bridge.__class__.__name__=='TopicBridge' and bridge.direction=='R2B' %}
         ## Topic Bridge R2B
         from {{ bridge.topic.msg.split('/')[0] }}.msg import {{ bridge.topic.msg.split('/')[1] }}
-        br = R2BTopicBridge(self, '{{ bridge.topic.uri }}', {{ bridge.topic.msg.split('/')[1] }}, self.broker_type, '{{ bridge.brokerURI }}', self.conn_params)
+        br = R2BTopicBridge(self, '{{ bridge.topic.uri }}', {{ bridge.topic.msg.split('/')[1] }}, self.broker_type, '{{ bridge.brokerURI }}', self.conn_params, {{ bridge.transform_dict }})
         self.br_list.append(br)
         {% elif bridge.__class__.__name__=='ServiceBridge' and bridge.direction=='B2R' %}
         ## RPC Bridge B2R

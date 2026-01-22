@@ -5,14 +5,27 @@ from commlib.endpoints import endpoint_factory, EndpointType, TransportType
 from ros_msg_transform import ros_msg_to_dict, dict_to_ros_msg
 
 
+class DotDict(dict):
+    """A dictionary that allows dot notation access to its items."""
+    def __getattr__(self, name):
+        try:
+            value = self[name]
+            if isinstance(value, dict):
+                return DotDict(value)
+            return value
+        except KeyError:
+            raise AttributeError(name)
+
+
 class B2RTopicBridge:
 
-    def __init__(self, ros_topic: str, msg_type: Any, broker_type: Any, broker_uri, broker_conn_params):
+    def __init__(self, ros_topic: str, msg_type: Any, broker_type: Any, broker_uri, broker_conn_params, transform=None):
         self.ros_topic = ros_topic
         self.broker_uri = broker_uri
         self.msg_type = msg_type
         self.broker_type = broker_type
         self.broker_conn_params = broker_conn_params
+        self.transform = transform
         self.queue_size = 10
 
         self._init_ros_endpoint()
@@ -36,6 +49,16 @@ class B2RTopicBridge:
         self.bsub.run()
 
     def on_msg(self, data):
+        if self.transform:
+            # Use eval with data as context
+            context = DotDict(data)
+            transformed_data = {}
+            for target, expr in self.transform.items():
+                try:
+                    transformed_data[target] = eval(expr, {"msg": context, "data": context})
+                except Exception as e:
+                    rospy.logerr(f"Transformation error: {e}")
+            data = transformed_data
         _msg = dict_to_ros_msg(data, self.msg_type)
         rospy.loginfo(f'Publishing: {_msg}')
         self.ros_pub.publish(_msg)
@@ -45,12 +68,13 @@ class R2BTopicBridge:
 
     def __init__(self, ros_topic: str, msg_type: Any,
                  broker_type: Any, broker_uri,
-                 broker_conn_params):
+                 broker_conn_params, transform=None):
         self.ros_topic = ros_topic
         self.broker_uri = broker_uri
         self.msg_type = msg_type
         self.broker_type = broker_type
         self.broker_conn_params = broker_conn_params
+        self.transform = transform
 
         self._init_broker_endpoint()
         self._init_ros_endpoint()
@@ -73,5 +97,14 @@ class R2BTopicBridge:
 
     def on_msg(self, msg):
         _data = ros_msg_to_dict(msg)
+        if self.transform:
+            context = DotDict(_data)
+            transformed_data = {}
+            for target, expr in self.transform.items():
+                try:
+                    transformed_data[target] = eval(expr, {"msg": context, "data": context})
+                except Exception as e:
+                    rospy.logerr(f"Transformation error: {e}")
+            _data = transformed_data
         rospy.loginfo(f'Publishing: {_data}')
         self.bpub.publish(_data)

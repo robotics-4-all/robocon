@@ -1,0 +1,56 @@
+// Temperature Monitoring Robot with Data Transformations
+// This example demonstrates the data transformation feature in RoboCon
+
+Robot[ROS] TempMonitorBot @ "localhost" {
+    TOPICS
+        // Raw sensor data from robot
+        temp_celsius ["std_msgs/Float32", "/sensors/temperature"]
+        humidity ["std_msgs/Float32", "/sensors/humidity"]
+        battery_voltage ["std_msgs/Float32", "/battery/voltage"]
+        pose ["geometry_msgs/Pose2D", "/robot/pose"]
+}
+
+Broker[MQTT] CloudBroker {
+    host: "mqtt.example.com",
+    port: 8883,
+    ssl: True,
+    auth.username: "robot_01",
+    auth.password: "secret123"
+}
+
+// Transform Celsius to Fahrenheit for US-based cloud platform
+Bridge[Topic] temp_bridge temp_celsius : "sensors/temp" {
+    transform: {
+        temperature_f: "msg.data * 1.8 + 32",
+        unit: "'fahrenheit'",
+        sensor_id: "'temp_sensor_01'"
+    }
+};
+
+// Add humidity percentage and classification
+Bridge[Topic] humidity_bridge humidity : "sensors/humidity" {
+    transform: {
+        humidity_percent: "msg.data * 100",
+        level: "'high' if msg.data > 0.7 else 'normal' if msg.data > 0.4 else 'low'",
+        timestamp: "msg.header.stamp.secs if hasattr(msg, 'header') else 0"
+    }
+};
+
+// Convert battery voltage to percentage (assuming 12V max)
+Bridge[Topic] battery_bridge battery_voltage : "battery/status" {
+    transform: {
+        percentage: "min(100, max(0, (msg.data / 12.0) * 100))",
+        voltage: "msg.data",
+        status: "'critical' if msg.data < 10.5 else 'low' if msg.data < 11.0 else 'normal'"
+    }
+};
+
+// Extract and transform pose data to a more compact format
+Bridge[Topic] pose_bridge pose : "robot/location" {
+    transform: {
+        x: "round(msg.x, 2)",
+        y: "round(msg.y, 2)",
+        heading: "round(msg.theta * 57.2958, 1)",
+        zone: "'north' if msg.y > 0 else 'south'"
+    }
+};
