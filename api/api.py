@@ -343,7 +343,7 @@ async def validate_file(
         _cleanup_temp_file(fpath)
 
 
-@api.post("/transformation/code")
+@api.post("/generate")
 async def generate_code(
     request: CodeGenerationRequest,
     background_tasks: BackgroundTasks,
@@ -376,11 +376,11 @@ async def generate_code(
     return FileResponse(
         path=tarball_path,
         filename=f"{request.name}_generated_code.tar.gz",
-        media_type="application/gzip"
+        media_type="application/x-tar",
     )
 
 
-@api.post("/transformation/code/file")
+@api.post("/generate/file")
 async def generate_code_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -419,7 +419,7 @@ async def generate_code_file(
     return FileResponse(
         path=tarball_path,
         filename=f"{project_name}_generated_code.tar.gz",
-        media_type="application/gzip"
+        media_type="application/x-tar",
     )
 
 
