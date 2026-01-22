@@ -37,7 +37,7 @@ api_keys = [API_KEY]
 api = FastAPI(
     title="RoboCon Validation API",
     description="API for validating RoboCon models",
-    version="0.2.2",
+    version="0.3.0",
 )
 
 api_key_header = APIKeyHeader(name="X-API-Key")
