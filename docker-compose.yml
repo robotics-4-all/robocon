@@ -1,13 +1,14 @@
 version: '3.8'
 
 services:
-  roboconnect:
-    image: roboconnect
+  robocon:
+    image: robocon
     build:
       context: .
       dockerfile: Dockerfile
-    command: uvicorn roboconnect.api:api --host 0.0.0.0 --port 8080 --root-path ${ROOT_PATH:-/}
+    command: uvicorn api.api:api --host 0.0.0.0 --port 8080 --root-path ${API_ROOT_PATH:-/}
     ports:
-      - ${API_HOST:-0.0.0.0}:${PORT:-8080}:8080
+      - ${API_HOST:-0.0.0.0}:${API_PORT:-8080}:8080
     environment:
       - API_KEY=${API_KEY}
+      - API_ROOT_PATH=${API_ROOT_PATH}
