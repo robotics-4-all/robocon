@@ -22,8 +22,8 @@ Broker[MQTT] MappingBroker {
     port: 1883
 }
 
-# Bridge SLAM endpoints
+// Bridge SLAM endpoints
 Bridge[Node] slam_bridges slam_toolbox:"slam";
 
-# Bridge TF separately if needed for specific visualization
+// Bridge TF separately if needed for specific visualization
 Bridge[TF] tf_bridge tf:"tf";

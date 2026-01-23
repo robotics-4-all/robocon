@@ -1,8 +1,8 @@
-# NodeBridge Features Example
-# This example demonstrates all the new NodeBridge capabilities:
-# - Optional prefix
-# - Custom topic/service/action URI mappings
-# - Mixed configurations
+// NodeBridge Features Example
+// This example demonstrates all the new NodeBridge capabilities:
+// - Optional prefix
+// - Custom topic/service/action URI mappings
+// - Mixed configurations
 
 Robot[ROS] AdvancedRobot @ "localhost" {
     TOPICS
@@ -23,7 +23,7 @@ Robot[ROS] AdvancedRobot @ "localhost" {
         pick [ "manipulation_msgs/PickPlace", "/robot/pick" ]
 
     NODES
-        # Main robot controller
+        // Main robot controller
         controller {
             uri: "/robot/controller"
             publishes: [ status, diagnostics ]
@@ -32,7 +32,7 @@ Robot[ROS] AdvancedRobot @ "localhost" {
             actions: [ navigate, pick ]
         }
 
-        # Sensor node
+        // Sensor node
         sensors {
             uri: "/robot/sensors"
             publishes: [ camera, lidar ]
@@ -44,16 +44,16 @@ Broker[MQTT] CloudBroker {
     port: 8883
 }
 
-# Example 1: NodeBridge with prefix only (backward compatible)
-# All topics/services/actions will use the prefix
+// Example 1: NodeBridge with prefix only (backward compatible)
+// All topics/services/actions will use the prefix
 Bridge[Node] basic_bridge controller:"robot/main";
 
-# Example 2: NodeBridge without prefix
-# All topics/services/actions use their names directly
+// Example 2: NodeBridge without prefix
+// All topics/services/actions use their names directly
 Bridge[Node] no_prefix_bridge sensors;
 
-# Example 3: NodeBridge with custom topic mappings
-# Some topics get custom URIs, others use the prefix
+// Example 3: NodeBridge with custom topic mappings
+// Some topics get custom URIs, others use the prefix
 Bridge[Node] custom_bridge controller:"robot/ctrl" {
     topic_maps: {
         status: "telemetry/robot/health/status",
@@ -70,8 +70,8 @@ Bridge[Node] custom_bridge controller:"robot/ctrl" {
     }
 };
 
-# Example 4: NodeBridge without prefix but with custom mappings
-# Unmapped items use their name directly (no prefix)
+// Example 4: NodeBridge without prefix but with custom mappings
+// Unmapped items use their name directly (no prefix)
 Bridge[Node] selective_mapping sensors {
     topic_maps: {
         camera: "perception/vision/front_camera",

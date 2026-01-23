@@ -30,7 +30,8 @@ docker-up:
 docker-down:
 	docker compose down
 
-test: docker-test ## Run tests in Docker container (alias for docker-test)
+test:
+	pytest --tb=line
 
 docker-test: ## Build Docker image and run tests inside container
 	docker build -t ${IMAGE_ID}-test --target test -f Dockerfile.test .

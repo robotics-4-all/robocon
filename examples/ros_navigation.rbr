@@ -38,8 +38,8 @@ Broker[Redis] NavBroker {
     port: 6379
 }
 
-# Bridge move_base for remote navigation commands
+// Bridge move_base for remote navigation commands
 Bridge[Node] nav_bridges move_base:"robot/nav";
 
-# Bridge AMCL for localization monitoring
+// Bridge AMCL for localization monitoring
 Bridge[Node] amcl_bridges amcl:"robot/amcl";

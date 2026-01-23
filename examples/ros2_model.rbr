@@ -24,8 +24,8 @@ Broker[MQTT] HomeMQTT {
     auth.password: ""
 }
 
-# Bridge all endpoints of base_controller node
+// Bridge all endpoints of base_controller node
 Bridge[Node] base_bridges base_controller:"robot";
 
-# TF Bridge (Assuming 'odom' topic is used for TF in this context)
+// TF Bridge (Assuming 'odom' topic is used for TF in this context)
 Bridge[TF] tf_bridge odom:"tf";

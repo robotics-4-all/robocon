@@ -32,5 +32,5 @@ Broker[AMQP] PerceptionBroker {
     vhost: "/robotics"
 }
 
-# Bridge all endpoints of object_detector node
+// Bridge all endpoints of object_detector node
 Bridge[Node] vision_bridges object_detector:"vision";

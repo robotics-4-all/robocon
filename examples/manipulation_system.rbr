@@ -30,8 +30,8 @@ Broker[MQTT] ManipulatorBroker {
     port: 1883
 }
 
-# Bridge MoveGroup action for remote control
+// Bridge MoveGroup action for remote control
 Bridge[Node] move_group_bridges move_group_node:"arm/move_group";
 
-# Bridge joint states for remote monitoring
+// Bridge joint states for remote monitoring
 Bridge[Topic] joint_state_bridge joint_states:"arm/joint_states";

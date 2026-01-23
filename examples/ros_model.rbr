@@ -24,5 +24,5 @@ Broker[MQTT] HomeMQTT {
     auth.password: ""
 }
 
-# Bridge all endpoints of base_controller node
+// Bridge all endpoints of base_controller node
 Bridge[Node] base_bridges base_controller:"robot";

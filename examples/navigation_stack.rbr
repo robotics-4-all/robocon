@@ -42,8 +42,8 @@ Broker[Redis] NavBroker {
     port: 6379
 }
 
-# Bridge all endpoints of amcl node
+// Bridge all endpoints of amcl node
 Bridge[Node] amcl_bridges amcl:"robot/amcl";
 
-# Bridge navigation action
+// Bridge navigation action
 Bridge[Node] nav_bridges bt_navigator:"robot/nav";
