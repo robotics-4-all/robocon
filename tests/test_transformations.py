@@ -16,7 +16,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] sensor_bridge t_sensor : "iot/telemetry" {
+Bridge[Topic] sensor_bridge t_sensor -> "iot/telemetry" {
     transform: {
         temp_f: "msg.data * 1.8 + 32",
         status: "'CRITICAL' if msg.data > 100 else 'OK'"
@@ -132,7 +132,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] data_bridge t_data : "iot/data" {
+Bridge[Topic] data_bridge t_data -> "iot/data" {
     transform: {
         value: "msg.nested.field * 2",
         flag: "msg.status == 'active'"

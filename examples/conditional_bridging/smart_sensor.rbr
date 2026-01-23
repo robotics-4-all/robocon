@@ -19,27 +19,27 @@ Broker[MQTT] CloudBroker {
 }
 
 // Only forward critical diagnostic messages (ERROR or FATAL)
-Bridge[Topic] critical_diagnostics diagnostics : "alerts/critical" {
+Bridge[Topic] critical_diagnostics diagnostics -> "alerts/critical" {
     when: "msg.data == 'ERROR' or msg.data == 'FATAL'"
 };
 
 // Only send temperature readings above threshold
-Bridge[Topic] high_temp_alerts temperature : "alerts/temperature" {
+Bridge[Topic] high_temp_alerts temperature -> "alerts/temperature" {
     when: "msg.data > 85.0"
 };
 
 // Filter out test/debug status messages
-Bridge[Topic] production_status status : "system/status" {
+Bridge[Topic] production_status status -> "system/status" {
     unless: "msg.data.startswith('DEBUG') or msg.data.startswith('TEST')"
 };
 
 // Only forward abnormal vibration readings
-Bridge[Topic] vibration_alerts vibration : "alerts/vibration" {
+Bridge[Topic] vibration_alerts vibration -> "alerts/vibration" {
     when: "msg.data > 2.5 or msg.data < 0.1"
 };
 
 // Only send low battery alerts (below 20%)
-Bridge[Topic] low_battery_alerts battery : "alerts/battery" {
+Bridge[Topic] low_battery_alerts battery -> "alerts/battery" {
     when: "msg.data < 11.0"
     transform: {
         voltage: "msg.data",

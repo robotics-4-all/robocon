@@ -142,3 +142,34 @@ class R2BTopicBridge:
             _data = transformed_data
         rospy.loginfo(f'Publishing: {_data}')
         self.bpub.publish(_data)
+
+
+class TFBridge:
+    def __init__(self, broker_type: Any, broker_prefix: str, broker_conn_params):
+        self.broker_prefix = broker_prefix
+        self.broker_type = broker_type
+        self.broker_conn_params = broker_conn_params
+
+        from tf2_msgs.msg import TFMessage
+        # Note: tf2_web_republisher might not be available in all ROS1 systems,
+        # but we follow the requirement.
+        try:
+            from tf2_web_republisher.msg import TFSubscriptionActionGoal
+        except ImportError:
+            # Fallback or handle missing dependency
+            TFSubscriptionActionGoal = None
+
+        self.tf_br = R2BTopicBridge(
+            '/tf', TFMessage, broker_type,
+            f'{broker_prefix}/tf', broker_conn_params
+        )
+        self.tf_static_br = R2BTopicBridge(
+            '/tf_static', TFMessage, broker_type,
+            f'{broker_prefix}/tf_static', broker_conn_params
+        )
+        if TFSubscriptionActionGoal:
+            self.tf_web_br = R2BTopicBridge(
+                '/tf2_web_republisher', TFSubscriptionActionGoal,
+                broker_type, f'{broker_prefix}/tf2_web_republisher',
+                broker_conn_params
+            )

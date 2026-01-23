@@ -57,7 +57,7 @@ Broker[MQTT] TestBroker {
     auth.password: "pass"
 }
 
-Bridge[Topic] test_bridge test:"test/topic";
+Bridge[Topic] test_bridge test -> "test/topic";
 """
         model = metamodel.model_from_str(model_with_auth)
         
@@ -80,7 +80,7 @@ Broker[MQTT] TestBroker {
     ssl: "True"
 }
 
-Bridge[Topic] test_bridge test:"test/topic";
+Bridge[Topic] test_bridge test -> "test/topic";
 """
         model = metamodel.model_from_str(model_with_bool)
         

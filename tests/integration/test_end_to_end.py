@@ -139,10 +139,10 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] sensor_bridge sensor_data:"sensors/scan";
-Bridge[Topic] state_bridge robot_state:"status/state";
-Bridge[Service] trigger_bridge "commands/trigger":trigger;
-Bridge[Action] move_bridge "commands/move":move;
+Bridge[Topic] sensor_bridge sensor_data -> "sensors/scan";
+Bridge[Topic] state_bridge robot_state -> "status/state";
+Bridge[Service] trigger_bridge "commands/trigger" -> trigger;
+Bridge[Action] move_bridge "commands/move" -> move;
 """
         
         mm = get_mm()

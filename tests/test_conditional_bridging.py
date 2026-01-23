@@ -16,7 +16,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] critical_only diagnostics : "alerts/critical" {
+Bridge[Topic] critical_only diagnostics -> "alerts/critical" {
     when: "msg.data == 'ERROR' or msg.data == 'FATAL'"
 };
 """
@@ -35,7 +35,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] no_test_data sensor_data : "iot/sensors" {
+Bridge[Topic] no_test_data sensor_data -> "iot/sensors" {
     unless: "msg.data < 0"
 };
 """
@@ -82,7 +82,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] bad_bridge data : "topic" {
+Bridge[Topic] bad_bridge data -> "topic" {
     when: "msg.data == 'test'"
     unless: "msg.data == 'debug'"
 };
@@ -107,7 +107,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] normal_bridge data : "topic";
+Bridge[Topic] normal_bridge data -> "topic";
 """
     model_file = tmp_path / "test_no_condition.rbr"
     model_file.write_text(model_content)
@@ -133,7 +133,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] hot_temps temp : "alerts/hot" {
+Bridge[Topic] hot_temps temp -> "alerts/hot" {
     when: "msg.data > 100"
     transform: {
         temp_f: "msg.data * 1.8 + 32",
@@ -189,7 +189,7 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] complex_filter status : "filtered" {
+Bridge[Topic] complex_filter status -> "filtered" {
     when: "(msg.data.startswith('ERR') or msg.data.startswith('WARN')) and len(msg.data) > 10"
 };
 """

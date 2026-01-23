@@ -51,7 +51,7 @@ ROSNode:
 Bridge: TopicBridge | ServiceBridge | ActionBridge | TFBridge | NodeBridge;
 
 TopicBridge:
-    'Bridge' '[' 'Topic' ']' name=ID lhs=TopicEndpoint ':' rhs=TopicEndpoint
+    'Bridge' '[' 'Topic' ']' name=ID lhs=TopicEndpoint '->' rhs=TopicEndpoint
     ('{'
         (when=WhenClause)?
         (unless=UnlessClause)?
@@ -76,22 +76,20 @@ UnlessClause:
 TopicEndpoint: ros=[ROSTopic] | broker=STRING;
 
 ServiceBridge:
-    'Bridge' '[' 'Service' ']' name=ID lhs=ServiceEndpoint ':' rhs=ServiceEndpoint ';'
+    'Bridge' '[' 'Service' ']' name=ID lhs=ServiceEndpoint '->' rhs=ServiceEndpoint ';'
 ;
 
 ServiceEndpoint: ros=[ROSService] | broker=STRING;
 
 ActionBridge:
-    'Bridge' '[' 'Action' ']' name=ID lhs=ActionEndpoint ':' rhs=ActionEndpoint ';'
+    'Bridge' '[' 'Action' ']' name=ID lhs=ActionEndpoint '->' rhs=ActionEndpoint ';'
 ;
 
 ActionEndpoint: ros=[ROSAction] | broker=STRING;
 
 TFBridge:
-    'Bridge' '[' 'TF' ']' name=ID lhs=TFEndpoint ':' rhs=TFEndpoint ';'
+    'Bridge' '[' 'TF' ']' name=ID (':' prefix=STRING)? ';'
 ;
-
-TFEndpoint: ros=[ROSTopic] | broker=STRING;
 
 NodeBridge:
     'Bridge' '[' 'Node' ']' name=ID node=[ROSNode] (':' prefix=STRING)?

@@ -165,6 +165,10 @@ def model_processor(model, metamodel):
                     ab.brokerURI = f"{prefix}/{action.name}" if prefix else action.name
                 bridge_processor(ab)
                 new_bridges.append(ab)
+        elif bridge.__class__.__name__ == 'TFBridge':
+            if not hasattr(bridge, 'prefix') or not bridge.prefix:
+                bridge.prefix = bridge.name
+            new_bridges.append(bridge)
         else:
             new_bridges.append(bridge)
     model.bridges = new_bridges

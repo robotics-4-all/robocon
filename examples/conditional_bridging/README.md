@@ -10,7 +10,7 @@ The `smart_sensor.rbr` model shows a smart IoT sensor that only forwards relevan
 
 ### 1. `when` Clause - Include If True
 ```robocon
-Bridge[Topic] critical_diagnostics diagnostics : "alerts/critical" {
+Bridge[Topic] critical_diagnostics diagnostics -> "alerts/critical" {
     when: "msg.data == 'ERROR' or msg.data == 'FATAL'"
 };
 ```
@@ -18,7 +18,7 @@ Only forwards messages when the condition evaluates to `True`.
 
 ### 2. `unless` Clause - Exclude If True
 ```robocon
-Bridge[Topic] production_status status : "system/status" {
+Bridge[Topic] production_status status -> "system/status" {
     unless: "msg.data.startswith('DEBUG') or msg.data.startswith('TEST')"
 };
 ```
@@ -26,7 +26,7 @@ Forwards all messages **except** when the condition is `True`.
 
 ### 3. Numeric Thresholds
 ```robocon
-Bridge[Topic] high_temp_alerts temperature : "alerts/temperature" {
+Bridge[Topic] high_temp_alerts temperature -> "alerts/temperature" {
     when: "msg.data > 85.0"
 };
 ```
@@ -34,7 +34,7 @@ Filter based on numeric values.
 
 ### 4. Range Checks
 ```robocon
-Bridge[Topic] vibration_alerts vibration : "alerts/vibration" {
+Bridge[Topic] vibration_alerts vibration -> "alerts/vibration" {
     when: "msg.data > 2.5 or msg.data < 0.1"
 };
 ```
@@ -42,7 +42,7 @@ Detect values outside normal operating ranges.
 
 ### 5. Combining Conditions with Transformations
 ```robocon
-Bridge[Topic] low_battery_alerts battery : "alerts/battery" {
+Bridge[Topic] low_battery_alerts battery -> "alerts/battery" {
     when: "msg.data < 11.0"
     transform: {
         voltage: "msg.data",
@@ -109,7 +109,7 @@ A bridge **cannot** have both `when` and `unless` clauses:
 
 ```robocon
 // ❌ This will cause a validation error
-Bridge[Topic] bad_bridge data : "topic" {
+Bridge[Topic] bad_bridge data -> "topic" {
     when: "msg.data > 10"
     unless: "msg.data < 0"  // ERROR: Can't have both!
 };

@@ -183,3 +183,28 @@ class R2BTopicBridge:
             _data = transformed_data
         self.nh.get_logger().info('Publishing: "%s"' % _data)
         self.bpub.publish(_data)
+
+
+class TFBridge:
+    def __init__(self, nh, broker_type: Any, broker_prefix: str, broker_conn_params):
+        self.nh = nh
+        self.broker_prefix = broker_prefix
+        self.broker_type = broker_type
+        self.broker_conn_params = broker_conn_params
+
+        from tf2_msgs.msg import TFMessage
+        from tf2_web_republisher.msg import TFSubscriptionActionGoal
+
+        self.tf_br = R2BTopicBridge(
+            nh, '/tf', TFMessage, broker_type,
+            f'{broker_prefix}/tf', broker_conn_params
+        )
+        self.tf_static_br = R2BTopicBridge(
+            nh, '/tf_static', TFMessage, broker_type,
+            f'{broker_prefix}/tf_static', broker_conn_params
+        )
+        self.tf_web_br = R2BTopicBridge(
+            nh, '/tf2_web_republisher', TFSubscriptionActionGoal,
+            broker_type, f'{broker_prefix}/tf2_web_republisher',
+            broker_conn_params
+        )

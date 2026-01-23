@@ -34,4 +34,4 @@ Broker[MQTT] ManipulatorBroker {
 Bridge[Node] move_group_bridges move_group_node:"arm/move_group";
 
 // Bridge joint states for remote monitoring
-Bridge[Topic] joint_state_bridge joint_states:"arm/joint_states";
+Bridge[Topic] joint_state_bridge joint_states -> "arm/joint_states";

@@ -19,7 +19,7 @@ Broker[MQTT] CloudBroker {
 }
 
 // Transform Celsius to Fahrenheit for US-based cloud platform
-Bridge[Topic] temp_bridge temp_celsius : "sensors/temp" {
+Bridge[Topic] temp_bridge temp_celsius -> "sensors/temp" {
     transform: {
         temperature_f: "msg.data * 1.8 + 32",
         unit: "'fahrenheit'",
@@ -28,7 +28,7 @@ Bridge[Topic] temp_bridge temp_celsius : "sensors/temp" {
 };
 
 // Add humidity percentage and classification
-Bridge[Topic] humidity_bridge humidity : "sensors/humidity" {
+Bridge[Topic] humidity_bridge humidity -> "sensors/humidity" {
     transform: {
         humidity_percent: "msg.data * 100",
         level: "'high' if msg.data > 0.7 else 'normal' if msg.data > 0.4 else 'low'",
@@ -37,7 +37,7 @@ Bridge[Topic] humidity_bridge humidity : "sensors/humidity" {
 };
 
 // Convert battery voltage to percentage (assuming 12V max)
-Bridge[Topic] battery_bridge battery_voltage : "battery/status" {
+Bridge[Topic] battery_bridge battery_voltage -> "battery/status" {
     transform: {
         percentage: "min(100, max(0, (msg.data / 12.0) * 100))",
         voltage: "msg.data",
@@ -46,7 +46,7 @@ Bridge[Topic] battery_bridge battery_voltage : "battery/status" {
 };
 
 // Extract and transform pose data to a more compact format
-Bridge[Topic] pose_bridge pose : "robot/location" {
+Bridge[Topic] pose_bridge pose -> "robot/location" {
     transform: {
         x: "round(msg.x, 2)",
         y: "round(msg.y, 2)",

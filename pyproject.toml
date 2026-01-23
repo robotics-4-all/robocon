@@ -97,6 +97,7 @@ omit = [
     "*/__pycache__/*",
     "*/build/*",
     "*/templates/*.j2",
+    "*/templates/*.py",
 ]
 
 [tool.coverage.report]

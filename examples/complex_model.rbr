@@ -32,4 +32,4 @@ Broker[Redis] CloudBroker {
 Bridge[Node] nav_bridges navigation:"robot";
 
 // TF Bridge
-Bridge[TF] tf_to_cloud tf:"tf";
+Bridge[TF] tf_to_cloud;

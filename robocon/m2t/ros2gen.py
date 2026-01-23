@@ -62,13 +62,20 @@ class GeneratorROS2:
     def report(model):
         print(f"[*] - ROS2 System: {model.robot.name}")
         for bridge in model.bridges:
-            if hasattr(bridge, 'topic'):
-                ros_uri = bridge.topic.uri
-            elif hasattr(bridge, 'service'):
-                ros_uri = bridge.service.uri
+            if bridge.__class__.__name__ == 'TFBridge':
+                ros_uri = 'multiple'
+                direction = 'R2B'
+                broker_uri = f"{bridge.prefix}/*"
             else:
-                ros_uri = getattr(bridge, 'rosURI', 'N/A')
+                if hasattr(bridge, 'topic'):
+                    ros_uri = bridge.topic.uri
+                elif hasattr(bridge, 'service'):
+                    ros_uri = bridge.service.uri
+                else:
+                    ros_uri = getattr(bridge, 'rosURI', 'N/A')
+                direction = bridge.direction
+                broker_uri = bridge.brokerURI
             print(f'[*] - Bridge: Type={bridge.__class__.__name__},' + \
-                  f' Direction={bridge.direction}, ROS_URI={ros_uri},' + \
-                  f' Broker_URI={bridge.brokerURI},' + \
+                  f' Direction={direction}, ROS_URI={ros_uri},' + \
+                  f' Broker_URI={broker_uri},' + \
                   f' Broker=<{model.broker.host}:{model.broker.port}>')

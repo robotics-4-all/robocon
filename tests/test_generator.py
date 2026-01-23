@@ -51,3 +51,63 @@ def test_generator_ros2_impl_calls_generator(mock_generate):
     _generator_ros2_impl(mock_metamodel, mock_model, "/output", False, False)
     
     mock_generate.assert_called_once()
+
+
+def test_generator_ros2_report_with_tfbridge():
+    """Test GeneratorROS2.report() with TFBridge."""
+    from robocon.m2t.ros2gen import GeneratorROS2
+    
+    mock_model = Mock()
+    mock_model.robot.name = "TestRobot"
+    mock_model.broker.host = "localhost"
+    mock_model.broker.port = 6379
+    
+    # Create a mock TFBridge
+    mock_tf_bridge = Mock()
+    mock_tf_bridge.__class__.__name__ = 'TFBridge'
+    mock_tf_bridge.prefix = "robot/tf"
+    
+    mock_model.bridges = [mock_tf_bridge]
+    
+    # Just ensure it doesn't crash
+    GeneratorROS2.report(mock_model)
+
+
+def test_generator_ros2_report_with_topic_bridge():
+    """Test GeneratorROS2.report() with TopicBridge."""
+    from robocon.m2t.ros2gen import GeneratorROS2
+    
+    mock_model = Mock()
+    mock_model.robot.name = "TestRobot"
+    mock_model.broker.host = "localhost"
+    mock_model.broker.port = 6379
+    
+    # Create a mock TopicBridge
+    mock_topic_bridge = Mock()
+    mock_topic_bridge.__class__.__name__ = 'TopicBridge'
+    mock_topic_bridge.topic.uri = "/scan"
+    mock_topic_bridge.direction = "R2B"
+    mock_topic_bridge.brokerURI = "sensors/scan"
+    
+    mock_model.bridges = [mock_topic_bridge]
+    
+    GeneratorROS2.report(mock_model)
+
+
+def test_generator_ros_report_with_tfbridge():
+    """Test GeneratorROS.report() with TFBridge."""
+    from robocon.m2t.rosgen import GeneratorROS
+    
+    mock_model = Mock()
+    mock_model.robot.name = "TestRobot"
+    mock_model.broker.host = "localhost"
+    mock_model.broker.port = 6379
+    
+    # Create a mock TFBridge
+    mock_tf_bridge = Mock()
+    mock_tf_bridge.__class__.__name__ = 'TFBridge'
+    mock_tf_bridge.prefix = "robot/tf"
+    
+    mock_model.bridges = [mock_tf_bridge]
+    
+    GeneratorROS.report(mock_model)

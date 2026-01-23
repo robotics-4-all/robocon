@@ -10,7 +10,7 @@ The `temp_monitor.rbr` model shows a temperature monitoring robot that bridges R
 
 ### 1. Unit Conversion
 ```robocon
-Bridge[Topic] temp_bridge temp_celsius : "sensors/temp" {
+Bridge[Topic] temp_bridge temp_celsius -> "sensors/temp" {
     transform: {
         temperature_f: "msg.data * 1.8 + 32",
         unit: "'fahrenheit'"
@@ -21,7 +21,7 @@ Converts Celsius to Fahrenheit for US-based systems.
 
 ### 2. Data Enrichment
 ```robocon
-Bridge[Topic] humidity_bridge humidity : "sensors/humidity" {
+Bridge[Topic] humidity_bridge humidity -> "sensors/humidity" {
     transform: {
         humidity_percent: "msg.data * 100",
         level: "'high' if msg.data > 0.7 else 'normal' if msg.data > 0.4 else 'low'"

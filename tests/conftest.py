@@ -40,9 +40,9 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] odom_bridge odom:"robot/odom";
-Bridge[Topic] cmd_bridge "robot/cmd":cmd_vel;
-Bridge[Service] reset_bridge "robot/reset":reset;
+Bridge[Topic] odom_bridge odom -> "robot/odom";
+Bridge[Topic] cmd_bridge "robot/cmd" -> cmd_vel;
+Bridge[Service] reset_bridge "robot/reset" -> reset;
 """
 
 
@@ -67,8 +67,8 @@ Broker[MQTT] TestBroker {
     port: 1883
 }
 
-Bridge[Topic] odom_bridge odom:"robot/odom";
-Bridge[Action] nav_bridge "robot/navigate":navigate;
+Bridge[Topic] odom_bridge odom -> "robot/odom";
+Bridge[Action] nav_bridge "robot/navigate" -> navigate;
 """
 
 
@@ -186,7 +186,7 @@ MessageBroker mqtt {
     host: "localhost"
 }
 
-Bridge[Topic] test_bridge undefined_topic:"test/topic";
+Bridge[Topic] test_bridge undefined_topic -> "test/topic";
 """
 
 
