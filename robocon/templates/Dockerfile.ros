@@ -1,0 +1,35 @@
+# Dockerfile for ROS (Noetic) Generated Bridge Code
+# Based on ROS Noetic (Ubuntu 20.04)
+
+FROM ros:noetic-ros-base
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# Install Python3 and pip (ROS Noetic uses Python 3)
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies for the generated bridge code
+# commlib-py: Communication library for broker connections (Redis, MQTT, AMQP)
+# ros-msg-transform: ROS message transformation utilities
+RUN pip3 install --no-cache-dir \
+    commlib-py \
+    ros-msg-transform
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Copy generated bridge code into the image
+COPY *.py /workspace/
+COPY requirements.txt /workspace/
+
+# Source ROS setup in bashrc for interactive shells
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+# Default command: source ROS and run the bridge
+# Users can override this with their specific bridge node
+CMD ["/bin/bash", "-c", "source /opt/ros/noetic/setup.bash && exec python3 *_bridges.py"]

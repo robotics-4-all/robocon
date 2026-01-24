@@ -43,6 +43,8 @@ class GeneratorROS2:
         GeneratorROS2.gen_requirements(out_dir)
         # Copy safe_eval.py to output directory
         GeneratorROS2.copy_safe_eval(out_dir)
+        # Copy Dockerfile to output directory
+        GeneratorROS2.copy_dockerfile(out_dir)
 
     @staticmethod
     def gen_requirements(out_dir):
@@ -56,6 +58,13 @@ class GeneratorROS2:
         """Copy safe_eval.py to output directory."""
         src = path.join(path.dirname(__file__), '..', 'templates', 'safe_eval.py')
         dst = path.join(out_dir, 'safe_eval.py')
+        shutil.copy(src, dst)
+
+    @staticmethod
+    def copy_dockerfile(out_dir):
+        """Copy Dockerfile to output directory."""
+        src = path.join(path.dirname(__file__), '..', 'templates', 'Dockerfile.ros2')
+        dst = path.join(out_dir, 'Dockerfile')
         shutil.copy(src, dst)
 
     @staticmethod

@@ -28,4 +28,4 @@ Broker[MQTT] HomeMQTT {
 Bridge[Node] base_bridges base_controller:"robot";
 
 // TF Bridge
-Bridge[TF] tf_bridge : "robot/tf";
+Bridge[TF] tf_bridge : "robot";

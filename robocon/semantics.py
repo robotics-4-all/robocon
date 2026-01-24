@@ -1,3 +1,4 @@
+import re
 from textx.exceptions import TextXSemanticError
 
 class Config:
@@ -174,13 +175,69 @@ def model_processor(model, metamodel):
     model.bridges = new_bridges
 
 
+def validate_ros_uri(uri, entity_type="topic"):
+    """
+    Validate ROS URI against ROS naming conventions.
+    
+    Args:
+        uri: The ROS URI to validate
+        entity_type: Type of entity (topic, service, action) for error messages
+        
+    Raises:
+        TextXSemanticError: If URI is invalid
+    """
+    if not uri:
+        raise TextXSemanticError(f"ROS {entity_type} URI cannot be empty")
+    
+    if not uri.startswith('/'):
+        raise TextXSemanticError(
+            f"ROS {entity_type} URI must start with '/'. Got: {uri}"
+        )
+    
+    if uri != '/' and uri.endswith('/'):
+        raise TextXSemanticError(
+            f"ROS {entity_type} URI cannot end with '/'. Got: {uri}"
+        )
+    
+    if '//' in uri:
+        raise TextXSemanticError(
+            f"ROS {entity_type} URI cannot contain consecutive '/'. Got: {uri}"
+        )
+    
+    # Check for invalid characters
+    # Valid: alphanumeric, underscore, forward slash
+    if not re.match(r'^/[a-zA-Z0-9_/]*$', uri):
+        raise TextXSemanticError(
+            f"ROS {entity_type} URI contains invalid characters. "
+            f"Only alphanumeric, underscore, and '/' are allowed. Got: {uri}"
+        )
+    
+    # Check that each segment starts with letter or underscore
+    segments = uri.split('/')[1:]  # Skip empty first element from leading /
+    for segment in segments:
+        if segment and not re.match(r'^[a-zA-Z_]', segment):
+            raise TextXSemanticError(
+                f"ROS {entity_type} URI segments must start with a letter or underscore. "
+                f"Invalid segment: '{segment}' in '{uri}'"
+            )
+
+
 def validate_model(model, metamodel):
     """
     Perform additional semantic validations on the model.
     """
-    # Example: Check if robot name is valid
+    # Check if robot name is valid
     if not model.robot.name:
         raise TextXSemanticError("Robot must have a name.")
     
-    # Add more validations here as needed
-    pass
+    # Validate ROS URIs for topics
+    for topic in getattr(model.robot, 'topics', []):
+        validate_ros_uri(topic.uri, "topic")
+    
+    # Validate ROS URIs for services
+    for service in getattr(model.robot, 'services', []):
+        validate_ros_uri(service.uri, "service")
+    
+    # Validate ROS URIs for actions
+    for action in getattr(model.robot, 'actions', []):
+        validate_ros_uri(action.uri, "action")
