@@ -29,16 +29,15 @@ Broker[MQTT] LocalBroker {
 // Bridge all endpoints of turtlesim_node with custom topic mappings
 // This demonstrates the new NodeBridge features:
 // - Optional prefix (still using "turtle1" here)
-// - Custom topic mappings for specific topics
+// - Custom topic mappings for specific topics  
 // - Custom service mappings for control services
 Bridge[Node] turtle_bridges turtlesim_node:"turtle1" {
-    topic_maps: {
-        pose: "turtlesim/robot/position",
-        cmd_vel: "turtlesim/robot/commands/velocity"
-    }
-    service_maps: {
-        spawn: "turtlesim/services/spawn_turtle",
-        kill: "turtlesim/services/remove_turtle"
-    }
+    TOPICS
+        pose -> "turtlesim/robot/position",
+        cmd_vel -> "turtlesim/robot/commands/velocity"
+    SERVICES
+        spawn -> "turtlesim/services/spawn_turtle",
+        kill -> "turtlesim/services/remove_turtle"
 };
+
 

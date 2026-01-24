@@ -55,26 +55,22 @@ Bridge[Node] no_prefix_bridge sensors;
 // Example 3: NodeBridge with custom topic mappings
 // Some topics get custom URIs, others use the prefix
 Bridge[Node] custom_bridge controller:"robot/ctrl" {
-    topic_maps: {
-        status: "telemetry/robot/health/status",
-        diagnostics: "telemetry/robot/health/diagnostics",
-        cmd_vel: "commands/robot/velocity"
-    }
-    service_maps: {
-        reset: "services/robot/emergency/reset",
-        calibrate: "services/robot/maintenance/calibrate"
-    }
-    action_maps: {
-        navigate: "actions/robot/navigation/move_to_goal",
-        pick: "actions/robot/manipulation/pick_object"
-    }
+    TOPICS
+        status -> "telemetry/robot/health/status",
+        diagnostics -> "telemetry/robot/health/diagnostics",
+        cmd_vel -> "commands/robot/velocity"
+    SERVICES
+        reset -> "services/robot/emergency/reset",
+        calibrate -> "services/robot/maintenance/calibrate"
+    ACTIONS
+        navigate -> "actions/robot/navigation/move_to_goal",
+        pick -> "actions/robot/manipulation/pick_object"
 };
 
 // Example 4: NodeBridge without prefix but with custom mappings
 // Unmapped items use their name directly (no prefix)
 Bridge[Node] selective_mapping sensors {
-    topic_maps: {
-        camera: "perception/vision/front_camera",
-        lidar: "perception/range/main_lidar"
-    }
+    TOPICS
+        camera -> "perception/vision/front_camera",
+        lidar -> "perception/range/main_lidar"
 };

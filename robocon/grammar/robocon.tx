@@ -94,35 +94,23 @@ TFBridge:
 NodeBridge:
     'Bridge' '[' 'Node' ']' name=ID node=[ROSNode] (':' prefix=STRING)?
     ('{'
-        (topic_maps=TopicMapList)?
-        (service_maps=ServiceMapList)?
-        (action_maps=ActionMapList)?
+        ('TOPICS' topic_maps*=NodeTopicMapping[','])?
+        ('SERVICES' service_maps*=NodeServiceMapping[','])?
+        ('ACTIONS' action_maps*=NodeActionMapping[','])?
     '}')?
     ';'
 ;
 
-TopicMapList:
-    'topic_maps' ':' '{' mappings*=TopicMapping[','] '}'
+NodeTopicMapping:
+    lhs=TopicEndpoint '->' rhs=TopicEndpoint
 ;
 
-TopicMapping:
-    topic=[ROSTopic] ':' broker_uri=STRING
+NodeServiceMapping:
+    lhs=ServiceEndpoint '->' rhs=ServiceEndpoint
 ;
 
-ServiceMapList:
-    'service_maps' ':' '{' mappings*=ServiceMapping[','] '}'
-;
-
-ServiceMapping:
-    service=[ROSService] ':' broker_uri=STRING
-;
-
-ActionMapList:
-    'action_maps' ':' '{' mappings*=ActionMapping[','] '}'
-;
-
-ActionMapping:
-    action=[ROSAction] ':' broker_uri=STRING
+NodeActionMapping:
+    lhs=ActionEndpoint '->' rhs=ActionEndpoint
 ;
 // <--------------------------------------------------------------------
 

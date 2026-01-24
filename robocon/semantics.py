@@ -91,21 +91,42 @@ def model_processor(model, metamodel):
             node = bridge.node
             prefix = bridge.prefix if hasattr(bridge, 'prefix') and bridge.prefix else ""
             
-            # Build mapping dictionaries
+            # Build mapping dictionaries from new arrow-based syntax
             topic_map = {}
-            if hasattr(bridge, 'topic_maps') and bridge.topic_maps and hasattr(bridge.topic_maps, 'mappings'):
-                for mapping in bridge.topic_maps.mappings:
-                    topic_map[mapping.topic.name] = mapping.broker_uri
+            if hasattr(bridge, 'topic_maps') and bridge.topic_maps:
+                for mapping in bridge.topic_maps:
+                    # Determine which side is ROS and which is broker
+                    if hasattr(mapping.lhs, 'ros') and mapping.lhs.ros:
+                        ros_topic = mapping.lhs.ros
+                        broker_uri = mapping.rhs.broker
+                    else:
+                        ros_topic = mapping.rhs.ros
+                        broker_uri = mapping.lhs.broker
+                    topic_map[ros_topic.name] = broker_uri
             
             service_map = {}
-            if hasattr(bridge, 'service_maps') and bridge.service_maps and hasattr(bridge.service_maps, 'mappings'):
-                for mapping in bridge.service_maps.mappings:
-                    service_map[mapping.service.name] = mapping.broker_uri
+            if hasattr(bridge, 'service_maps') and bridge.service_maps:
+                for mapping in bridge.service_maps:
+                    # Determine which side is ROS and which is broker
+                    if hasattr(mapping.lhs, 'ros') and mapping.lhs.ros:
+                        ros_service = mapping.lhs.ros
+                        broker_uri = mapping.rhs.broker
+                    else:
+                        ros_service = mapping.rhs.ros
+                        broker_uri = mapping.lhs.broker
+                    service_map[ros_service.name] = broker_uri
             
             action_map = {}
-            if hasattr(bridge, 'action_maps') and bridge.action_maps and hasattr(bridge.action_maps, 'mappings'):
-                for mapping in bridge.action_maps.mappings:
-                    action_map[mapping.action.name] = mapping.broker_uri
+            if hasattr(bridge, 'action_maps') and bridge.action_maps:
+                for mapping in bridge.action_maps:
+                    # Determine which side is ROS and which is broker
+                    if hasattr(mapping.lhs, 'ros') and mapping.lhs.ros:
+                        ros_action = mapping.lhs.ros
+                        broker_uri = mapping.rhs.broker
+                    else:
+                        ros_action = mapping.rhs.ros
+                        broker_uri = mapping.lhs.broker
+                    action_map[ros_action.name] = broker_uri
             
             # Expand publishes -> R2B TopicBridge
             for topic in getattr(node, 'publishes', []):

@@ -142,10 +142,10 @@ Broker[MQTT] mqtt {
 }
 
 Bridge[Node] ctrl_bridge controller:"robot" {
-    topic_maps: {
-        pose: "telemetry/position",
-        velocity: "commands/vel"
-    }
+    TOPICS
+        pose -> "telemetry/position",
+        velocity -> "commands/vel"
+    
 };
     """
     model_path.write_text(model_content)
@@ -186,9 +186,9 @@ Broker[MQTT] mqtt {
 }
 
 Bridge[Node] ctrl_bridge controller:"robot/ctrl" {
-    service_maps: {
-        reset: "services/emergency_reset"
-    }
+    SERVICES
+        reset -> "services/emergency_reset"
+    
 };
     """
     model_path.write_text(model_content)
@@ -231,9 +231,9 @@ Broker[MQTT] mqtt {
 }
 
 Bridge[Node] ctrl_bridge controller:"robot" {
-    topic_maps: {
-        pose: "telemetry/robot/position"
-    }
+    TOPICS
+        pose -> "telemetry/robot/position"
+    
 };
     """
     model_path.write_text(model_content)
@@ -290,13 +290,13 @@ Broker[MQTT] mqtt {
 }
 
 Bridge[Node] ctrl_bridge controller {
-    topic_maps: {
-        odom: "telemetry/odometry",
-        cmd_vel: "commands/velocity"
-    }
-    service_maps: {
-        reset: "services/reset"
-    }
+    TOPICS
+        odom -> "telemetry/odometry",
+        cmd_vel -> "commands/velocity"
+    
+    SERVICES
+        reset -> "services/reset"
+    
 };
     """
     model_path.write_text(model_content)
@@ -454,16 +454,16 @@ Broker[MQTT] mqtt {
 }
 
 Bridge[Node] main_bridge main_controller:"robot/main" {
-    topic_maps: {
-        odom: "telemetry/odometry",
-        cmd_vel: "commands/velocity"
-    }
-    service_maps: {
-        reset: "services/emergency_reset"
-    }
-    action_maps: {
-        navigate: "actions/navigation/goal"
-    }
+    TOPICS
+        odom -> "telemetry/odometry",
+        cmd_vel -> "commands/velocity"
+    
+    SERVICES
+        reset -> "services/emergency_reset"
+    
+    ACTIONS
+        navigate -> "actions/navigation/goal"
+    
 };
 
 Bridge[Node] lidar_bridge lidar_node;

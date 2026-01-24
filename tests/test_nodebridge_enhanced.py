@@ -101,10 +101,9 @@ Broker[MQTT] mqtt {
 }
 
 Bridge[Node] turtle_bridges turtlesim_node:"turtle1" {
-    topic_maps: {
-        pose: "robot/turtle/position",
-        cmd_vel: "robot/turtle/commands/velocity"
-    }
+    TOPICS
+        pose -> "robot/turtle/position",
+        cmd_vel -> "robot/turtle/commands/velocity"
 };
     """
     model_path.write_text(model_content)
@@ -149,9 +148,8 @@ Broker[MQTT] mqtt {
 }
 
 Bridge[Node] my_bridge mynode {
-    topic_maps: {
-        topic1: "custom/topic1"
-    }
+    TOPICS
+        topic1 -> "custom/topic1"
 };
     """
     model_path.write_text(model_content)
